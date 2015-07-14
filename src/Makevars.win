@@ -1,0 +1,6 @@
+PKG_LIBS = $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::LdFlags()") $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -lstdc++
+PREFIX =.
+include ./Makevars.include
+PKG_CPPFLAGS = $(INCLUDE_FCNN_R) $(shell "${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe" -e "Rcpp:::CxxFlags()")
+OBJECTS = $(OBJECTS_FCNN_R)
+PKG_CXXFLAGS = -DR_DLL -DFCNN_DOUBLE_ONLY

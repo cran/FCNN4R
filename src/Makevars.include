@@ -1,0 +1,10 @@
+INCLUDE_FCNN_R = -I$(PREFIX)
+
+OBJECTS_FCNN_R = \
+$(PREFIX)/fcnn/utils.o \
+$(PREFIX)/fcnn/struct.o \
+$(PREFIX)/fcnn/export.o \
+$(PREFIX)/fcnn/report.o \
+$(PREFIX)/fcnn/level2.o \
+$(PREFIX)/fcnn/level3.o \
+$(PREFIX)/interface.o
