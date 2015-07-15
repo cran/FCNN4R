@@ -1,4 +1,4 @@
-1ef9f8f61e49c1f556cf5ead58c1d246 *DESCRIPTION
+b58976451e60a58b7f9226aa68d33de5 *DESCRIPTION
 0f14d7b2e39679e984c3cfe84690f978 *NAMESPACE
 9ad40f6acf4609821343dee692c6f6eb *R/mlp_net.R
 ee5a62e529f8cee3cf255ba07e8b1ebc *R/mlp_plot.R
@@ -30,7 +30,7 @@ a5cbf2a452936f0dafa6f2a9e12590d2 *man/mlp_rnd_weights.Rd
 6baa4f2f74b731152d9db56acee64deb *man/mlp_teach_bp.Rd
 7a0d30359cc07f81f3423f4e461ebf58 *man/mlp_teach_rprop.Rd
 cc1aa6203f6a2e50682eed190f436c06 *src/Makevars
-c5e16cdb39e97f64ecadf567151aeb8e *src/Makevars.include
+6a64830eb135f53eb24828bbbc630242 *src/Makevars.include
 72447ed0391afff434fa48e58d9f9b9d *src/Makevars.win
 1efce13d1a69a027bdc2fb6c62946f5b *src/fcnn/activation.h
 ad217e9fd301aa0bf53eba67eeb05935 *src/fcnn/error.h
