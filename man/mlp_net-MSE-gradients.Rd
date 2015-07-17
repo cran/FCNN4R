@@ -33,9 +33,11 @@ of input rows}
 \value{
 \code{mlp_mse} returns mean squared error (numeric value).
 
-\code{mlp_grad} and \code{mlp_gradi} return two-element lists with the first
+\code{mlp_grad} returns two-element lists with the first
 field (\code{grad}) containing numeric vector with gradient and the second
 (\code{mse}) - the mean squared error.
+
+\code{mlp_gradi} returns numeric vector with gradient.
 
 \code{mlp_gradij} returns numeric matrix with gradients of outputs in
 consecutive columns.

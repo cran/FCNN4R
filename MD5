@@ -1,6 +1,6 @@
-b58976451e60a58b7f9226aa68d33de5 *DESCRIPTION
+5176685380f3855af3dd3cf9c782c8c2 *DESCRIPTION
 0f14d7b2e39679e984c3cfe84690f978 *NAMESPACE
-9ad40f6acf4609821343dee692c6f6eb *R/mlp_net.R
+696b3af48d913134443f7d2e6ec9160d *R/mlp_net.R
 ee5a62e529f8cee3cf255ba07e8b1ebc *R/mlp_plot.R
 1e2cd19aae0b153915b0e3f3cc7a25f6 *R/mlp_prune.R
 bd9571ca8ef9ad19b91864990caf0c84 *R/mlp_teach.R
@@ -12,7 +12,7 @@ bd9571ca8ef9ad19b91864990caf0c84 *R/mlp_teach.R
 e70f50f3882790d94fe3840cce4abfa9 *man/mlp_check_w.Rd
 97dd04db0ef36f5d6a482ba29810907e *man/mlp_eval.Rd
 fbd8bfb369cf57ec4f277147071de903 *man/mlp_export_C.Rd
-898a97e82abf1daed4d3c7b579350d13 *man/mlp_net-MSE-gradients.Rd
+1e9f2b7fa3e7951882cc4b790778ad0b *man/mlp_net-MSE-gradients.Rd
 eb45dd995781eb39401c90e5b247760f *man/mlp_net-class.Rd
 9b1fd79e96496a21338b2a2c97b119b4 *man/mlp_net-export-import.Rd
 bfaef5cac0cdeb19a35436858ff69a2a *man/mlp_net-general-information.Rd
@@ -29,9 +29,8 @@ a5cbf2a452936f0dafa6f2a9e12590d2 *man/mlp_rnd_weights.Rd
 7a8ae05f4133ddd2e0c335976e664ce1 *man/mlp_set_activation.Rd
 6baa4f2f74b731152d9db56acee64deb *man/mlp_teach_bp.Rd
 7a0d30359cc07f81f3423f4e461ebf58 *man/mlp_teach_rprop.Rd
-cc1aa6203f6a2e50682eed190f436c06 *src/Makevars
-6a64830eb135f53eb24828bbbc630242 *src/Makevars.include
-72447ed0391afff434fa48e58d9f9b9d *src/Makevars.win
+b1be04343d15a8b3e5e82eec1416eaed *src/Makevars
+888004372ad21f9d37626f85cbb411a7 *src/Makevars.win
 1efce13d1a69a027bdc2fb6c62946f5b *src/fcnn/activation.h
 ad217e9fd301aa0bf53eba67eeb05935 *src/fcnn/error.h
 868da8d493d43c67dcb6686c392a8d45 *src/fcnn/export.cpp
@@ -48,4 +47,4 @@ cf2a1140e1c81ca02fe2d3e1009d3d23 *src/fcnn/level3.cpp
 3e11191821544c1db669e09f31303aaa *src/fcnn/struct.h
 98bcb8994e38dd7f18a46c8508925f87 *src/fcnn/utils.cpp
 b1583ead31bc3b8e18ee6fd7d5413947 *src/fcnn/utils.h
-d4f68d17d42da073904c1ec3734b7a62 *src/interface.cpp
+9564df1e16a30e59e04ec5dfce650633 *src/interface.cpp

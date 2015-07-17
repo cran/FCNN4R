@@ -257,11 +257,15 @@ mlp_grad(const int *lays, const int *no_lays, const int *n_pts,
          const int *no_datarows, const double *in, const double *out,
          double *msegrad)
 {
-    double mse = fcnn::internal::grad(lays, *no_lays, n_pts,
-                                      w_pts, w_fl, w_val,
-                                      *hl_af, *hl_af_p, *ol_af, *ol_af_p,
-                                      *no_datarows, in, out, msegrad + 1);
-    msegrad[0] = mse;
+    try {
+        double mse = fcnn::internal::grad(lays, *no_lays, n_pts,
+                                        w_pts, w_fl, w_val,
+                                        *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                                        *no_datarows, in, out, msegrad + 1);
+        msegrad[0] = mse;
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
 }
 
 
@@ -275,10 +279,14 @@ mlp_gradi(const int *lays, const int *no_lays, const int *n_pts,
           const int *no_datarows, const int *i, double *in, const double *out,
           double *grad)
 {
-    fcnn::internal::gradi(lays, *no_lays, n_pts,
-                          w_pts, w_fl, w_val,
-                          *hl_af, *hl_af_p, *ol_af, *ol_af_p,
-                          *no_datarows, *i - 1, in, out, grad);
+    try {
+        fcnn::internal::gradi(lays, *no_lays, n_pts,
+                            w_pts, w_fl, w_val,
+                            *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                            *no_datarows, *i - 1, in, out, grad);
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
 }
 
 
@@ -292,10 +300,14 @@ mlp_gradij(const int *lays, const int *no_lays, const int *n_pts,
            const int *no_datarows, const int *i, double *in,
            double *grad)
 {
-    fcnn::internal::gradij(lays, *no_lays, n_pts,
-                           w_pts, w_fl, w_val, *no_w_on,
-                           *hl_af, *hl_af_p, *ol_af, *ol_af_p,
-                           *no_datarows, *i - 1, in, grad);
+    try {
+        fcnn::internal::gradij(lays, *no_lays, n_pts,
+                            w_pts, w_fl, w_val, *no_w_on,
+                            *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                            *no_datarows, *i - 1, in, grad);
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
 }
 
 
