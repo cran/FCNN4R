@@ -260,18 +260,19 @@ start:
             // remove neuron
             n_prev.erase(n_prev.begin() + n);
             n_next.erase(n_next.begin() + n);
-            for (int ll = l + 1; ll <= nol; ++ll) --n_p[ll];
             --layers[l];
-            --ni; --n;
-            ++count;
             if (report) {
                 message mes;
-                mes << "removing neuron " << (int)(n - n_p[l] + 1)
-                    << " in layer " << (int)(l + 1) << " ("  << (int)layers[l]
-                    << " neurons remain in this layer; "
-                    << (int)(n_p[nol]) << " total)";
+                mes << "removing neuron " << (n - n_p[l] + 1)
+                    << " in layer " << (l + 1) << " ("  << layers[l];
+                if (layers[l] == 1) mes << " neuron remains in this layer; ";
+                else mes << " neurons remain in this layer; ";
+                mes << (int)(n_p[nol]) << " total)";
                 fcnn::internal::report(mes);
             }
+            for (int ll = l + 1; ll <= nol; ++ll) --n_p[ll];
+            --ni; --n;
+            ++count;
         }
     }
     if (again) goto start;

@@ -28,7 +28,7 @@ when reteaching network}
 will be printed on the console (FALSE by default)}
 
 \item{plots}{logical value, if TRUE, the initial network is plotted and then
-       replotted every time weight or neuron is removed (FALSE by default)}
+       replotted every time neuron is removed and at the end of pruning (FALSE by default)}
 }
 \value{
 Three-element list, the first field (\code{net}) contains the pruned network,

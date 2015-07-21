@@ -39,7 +39,7 @@
 #' @param report logical value, if TRUE, information about the pruning process
 #'        will be printed on the console (FALSE by default)
 #' @param plots logical value, if TRUE, the initial network is plotted and then
-#'        replotted every time weight or neuron is removed (FALSE by default)
+#'        replotted every time neuron is removed and at the end of pruning (FALSE by default)
 #'
 #' @return Three-element list, the first field (\code{net}) contains the pruned network,
 #'         the second (\code{wcount}) - the number of connections removed (inactivated),
@@ -106,15 +106,15 @@ mlp_prune_mag <- function(net, input, output,
                             " remain active)\n"))
             }
         }
-        if (plots && !stop) {
-            mlp_plot(net)
-        }
         rmnres <- mlp_rm_neurons(net, report = report)
         net <- rmnres$net
-        if (plots && (rmnres$count != 0)) {
+        if (plots && (rmnres$count != 0) && !stop) {
             mlp_plot(net)
         }
         countn <- countn + rmnres$count
+    }
+    if (plots) {
+        mlp_plot(net)
     }
 
     return(list(net = net, wcount = countw, ncount = countn))
@@ -141,7 +141,7 @@ mlp_prune_mag <- function(net, input, output,
 #' @param report logical value, if TRUE, information about the pruning process
 #'        will be printed on the console (FALSE by default)
 #' @param plots logical value, if TRUE, the initial network is plotted and then
-#'        replotted every time weight or neuron is removed (FALSE by default)
+#'        replotted every time neuron is removed and at the end of pruning (FALSE by default)
 #' @param alpha numeric value, scaling factor used for initial Hessian approximation
 #'
 #' @return Three-element list, the first field (\code{net}) contains the pruned network,
@@ -231,15 +231,15 @@ mlp_prune_obs <- function(net, input, output,
                             " remain active)\n"))
             }
         }
-        if (plots && !stop) {
-            mlp_plot(net)
-        }
         rmnres <- mlp_rm_neurons(net, report = report)
         net <- rmnres$net
-        if (plots && (rmnres$count != 0)) {
+        if (plots && (rmnres$count != 0) && !stop) {
             mlp_plot(net)
         }
         countn <- countn + rmnres$count
+    }
+    if (plots) {
+        mlp_plot(net)
     }
 
     return(list(net = net, wcount = countw, ncount = countn))

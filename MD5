@@ -1,9 +1,9 @@
-5176685380f3855af3dd3cf9c782c8c2 *DESCRIPTION
+1fa7741fa7827905d4fca87efeb0e5c4 *DESCRIPTION
 0f14d7b2e39679e984c3cfe84690f978 *NAMESPACE
 696b3af48d913134443f7d2e6ec9160d *R/mlp_net.R
 ee5a62e529f8cee3cf255ba07e8b1ebc *R/mlp_plot.R
-1e2cd19aae0b153915b0e3f3cc7a25f6 *R/mlp_prune.R
-bd9571ca8ef9ad19b91864990caf0c84 *R/mlp_teach.R
+0fc1eaa0db7e33ad854b709fff8826c1 *R/mlp_prune.R
+be15a36305d321df992d61f7a0d888d6 *R/mlp_teach.R
 759db6df903619a0f492375c0d63c005 *inst/CITATION
 56ac88444d6285476b2eccbb7a83197c *man/FCNN4R-package.Rd
 183ffc118e424154c494b853745ff64f *man/is.mlp_net.Rd
@@ -22,8 +22,8 @@ b31b306cb5816f84b415639a54611bef *man/mlp_net-single-weight-access.Rd
 e23f82f17bdd8e2d644d6e6f5ee1b64b *man/mlp_net-weights-access.Rd
 6a23c50a73ee4ab3cccb5dad8d63a6f6 *man/mlp_net.Rd
 d3a94bad83f8db28a166b8f7586dd690 *man/mlp_plot.Rd
-2ec9238776a7ced449e95f04d6c67791 *man/mlp_prune_mag.Rd
-686ba0f2aa0a7bc67cf91c2123827c2a *man/mlp_prune_obs.Rd
+9a3ad71f62a0c9a36e01408bfa8eeaf7 *man/mlp_prune_mag.Rd
+88c282abb6e11a05f13eead7296d890a *man/mlp_prune_obs.Rd
 99e266d2ee6b72f4c9850e5d57591f97 *man/mlp_rm_neurons.Rd
 a5cbf2a452936f0dafa6f2a9e12590d2 *man/mlp_rnd_weights.Rd
 7a8ae05f4133ddd2e0c335976e664ce1 *man/mlp_set_activation.Rd
@@ -43,8 +43,8 @@ cf2a1140e1c81ca02fe2d3e1009d3d23 *src/fcnn/level3.cpp
 8b385f1a650acacbb32374ec05eb0d50 *src/fcnn/level3.h
 4e3f388059795e5a124cecad03787c0d *src/fcnn/report.cpp
 1980fdcd9113f1109a2a18354de9f421 *src/fcnn/report.h
-43557b40c2b16beae7414e58c8ccfefa *src/fcnn/struct.cpp
+c1bc535337c2aa59e8f80e8be6b8419c *src/fcnn/struct.cpp
 3e11191821544c1db669e09f31303aaa *src/fcnn/struct.h
-98bcb8994e38dd7f18a46c8508925f87 *src/fcnn/utils.cpp
+cd445d6567b8a2c9b29541fa541154f2 *src/fcnn/utils.cpp
 b1583ead31bc3b8e18ee6fd7d5413947 *src/fcnn/utils.h
 9564df1e16a30e59e04ec5dfce650633 *src/interface.cpp

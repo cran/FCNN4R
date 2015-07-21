@@ -76,7 +76,7 @@ mlp_teach_bp <- function(net, input, output,
     g <- gm$grad
     mse <- gm$mse
     if (mse < tol_level) {
-        return(list(net, NULL))
+        return(list(net = net, mse = NULL))
     }
 
     mseh <- numeric(length = max_epochs)
@@ -151,7 +151,7 @@ mlp_teach_rprop <- function(net, input, output,
     g0 <- gm$grad
     mse <- gm$mse
     if (mse < tol_level) {
-        return(list(net, NULL))
+        return(list(net = net, mse = NULL))
     }
     w0 <- mlp_get_weights(net);
     w1 <- w0 - 0.7 * g0;
@@ -168,7 +168,7 @@ mlp_teach_rprop <- function(net, input, output,
         cat(mes);
     }
     if (mse < tol_level) {
-        return(list(net, mse, 1))
+        return(list(net = net, mse = mse))
     }
 
     nw <- length(w0)
@@ -210,8 +210,8 @@ mlp_teach_rprop <- function(net, input, output,
         mseh[i] <- mse
         if (report_freq) {
             if (!(i %% report_freq)) {
-                mes <- paste0("Rprop; epoch ", i,
-                            ", mse: ", mse, " (desired: ", tol_level, ")\n")
+                mes <- paste0("Rprop; epoch ", i, ", mse: ", mse,
+                              " (desired: ", tol_level, ")\n")
                 cat(mes);
             }
         }

@@ -28,6 +28,7 @@
 
 
 
+using namespace std;
 using namespace fcnn;
 using namespace fcnn::internal;
 
@@ -50,7 +51,7 @@ message::operator<<(const char *s)
 
 
 message&
-message::operator<<(const std::string &s)
+message::operator<<(const string &s)
 {
     m_mes += s;
     return *this;
@@ -92,46 +93,46 @@ message::operator<<(double n)
 
 
 
-std::string
+string
 fcnn::internal::num2str(double n)
 {
     char buf[30];
-    std::sprintf(buf, "%g", n);
-    return std::string(buf);
+    sprintf(buf, "%g", n);
+    return string(buf);
 }
 
 
-std::string
+string
 fcnn::internal::num2str(float n)
 {
     char buf[30];
-    std::sprintf(buf, "%g", n);
-    return std::string(buf);
+    sprintf(buf, "%g", n);
+    return string(buf);
 }
 
 
-std::string
+string
 fcnn::internal::num2str(int n)
 {
     char buf[15];
     sprintf(buf, "%d", n);
-    return std::string(buf);
+    return string(buf);
 }
 
 
-std::string
+string
 fcnn::internal::num2str(unsigned n)
 {
     char buf[15];
     sprintf(buf, "%u", n);
-    return std::string(buf);
+    return string(buf);
 }
 
 
-std::string
+string
 fcnn::internal::time_str()
 {
-    std::string ts, mo, da, ho, mi, se;
+    string ts, mo, da, ho, mi, se;
     time_t tt = time(0);
     struct tm *now = localtime(&tt);
     mo = (now->tm_mon < 9) ? '0' + num2str(now->tm_mon + 1) : num2str(now->tm_mon + 1);
@@ -148,7 +149,7 @@ fcnn::internal::time_str()
 
 template <typename T>
 bool
-fcnn::internal::read(std::istream &is, T &n)
+fcnn::internal::read(istream &is, T &n)
 {
     char c;
     T x;
@@ -172,14 +173,14 @@ fcnn::internal::read(std::istream &is, T &n)
 
 
 // Instantiations
-template bool fcnn::internal::read<unsigned>(std::istream &s, unsigned &n);
-template bool fcnn::internal::read<int>(std::istream &s, int &n);
-template bool fcnn::internal::read<float>(std::istream &s, float &n);
-template bool fcnn::internal::read<double>(std::istream &s, double &n);
+template bool fcnn::internal::read<unsigned>(istream &s, unsigned &n);
+template bool fcnn::internal::read<int>(istream &s, int &n);
+template bool fcnn::internal::read<float>(istream &s, float &n);
+template bool fcnn::internal::read<double>(istream &s, double &n);
 
 
 bool
-fcnn::internal::write_comment(std::ostream &os, const std::string &s)
+fcnn::internal::write_comment(ostream &os, const string &s)
 {
     const char *c = s.c_str();
     if (*c) os << "# "; else return true;
@@ -196,7 +197,7 @@ fcnn::internal::write_comment(std::ostream &os, const std::string &s)
 
 
 bool
-fcnn::internal::read_comment(std::istream &is, std::string &s)
+fcnn::internal::read_comment(istream &is, string &s)
 {
     if (!is.good() || is.eof()) return false;
     char c;
@@ -225,7 +226,7 @@ start_line:
 
 
 void
-fcnn::internal::skip_comment(std::istream &is)
+fcnn::internal::skip_comment(istream &is)
 {
     if (!is.good() || is.eof()) return;
     char c;
@@ -244,7 +245,7 @@ start_line:
 
 
 void
-fcnn::internal::skip_blank(std::istream &is)
+fcnn::internal::skip_blank(istream &is)
 {
     char c;
     while (is.good() && !is.eof()) {
@@ -258,7 +259,7 @@ fcnn::internal::skip_blank(std::istream &is)
 
 
 void
-fcnn::internal::skip_all(std::istream &is)
+fcnn::internal::skip_all(istream &is)
 {
     char c;
     while (is.good() && !is.eof()) {
@@ -277,7 +278,7 @@ fcnn::internal::skip_all(std::istream &is)
 
 
 bool
-fcnn::internal::is_eol(std::istream &is)
+fcnn::internal::is_eol(istream &is)
 {
     char c;
     while (is.good() && !is.eof()) {
@@ -296,7 +297,7 @@ fcnn::internal::is_eol(std::istream &is)
 
 
 bool
-fcnn::internal::is_eoleof(std::istream &is)
+fcnn::internal::is_eoleof(istream &is)
 {
     char c;
     if (is.eof()) return true;
