@@ -266,8 +266,8 @@ start:
                 mes << "removing neuron " << (n - n_p[l] + 1)
                     << " in layer " << (l + 1) << " ("  << layers[l];
                 if (layers[l] == 1) mes << " neuron remains in this layer; ";
-                else mes << " neurons remain in this layer; ";
-                mes << (int)(n_p[nol]) << " total)";
+                else mes << " neurons remain in this layer, ";
+                mes << (n_p[nol] - 1) << " total)";
                 fcnn::internal::report(mes);
             }
             for (int ll = l + 1; ll <= nol; ++ll) --n_p[ll];

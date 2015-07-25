@@ -405,7 +405,6 @@ mlp_get_no_w <- function(net)
 # Reconstructing network, removing neurons
 # #########################################################################
 
-#
 #' Remove redundant neurons in a multilayer perceptron network
 #'
 #' This function removes redundant neurons from the network, i.e. hidden layers'
@@ -419,9 +418,10 @@ mlp_get_no_w <- function(net)
 #' @param report logical value, if TRUE, information about removed neurons
 #'        will be printed on the console (FALSE by default)
 #'
-#' @return Two-element list. The first element (\code{net}) is the network
+#' @return Three-element list. The first element (\code{net}) is the network
 #'         (an object of \code{mlp_net} class) with all redundant neurons
-#'         removed, the second (\code{count}) - the number of neurons removed.
+#'         removed, the second (\code{ncount}) - the number of neurons removed,
+#'         the third (\code{wcount}) - the number of weights removed.
 #'
 #' @export mlp_rm_neurons
 #'
@@ -430,6 +430,12 @@ mlp_rm_neurons <- function(net, report = FALSE)
     if (!is.mlp_net(net)) {
         stop("expected net argument to be of mlp_net class")
     }
+    hst <- net@m_n_pointers[2] + 1
+    hen <- net@m_n_pointers[length(net@m_layers)]
+    if (all(net@m_n_prev[hst:hen] != 0) && all(net@m_n_next[hst:hen] != 0)) {
+        return(list(net = net, ncount = 0, wcount = 0))
+    }
+    won0 <- net@m_w_on
     rmres <- .Call("mlp_rm_neurons",
                    net@m_layers,
                    net@m_n_pointers,
@@ -450,7 +456,7 @@ mlp_rm_neurons <- function(net, report = FALSE)
     net@m_w_values <- rmres[[6]]
     net@m_w_flags <- as.logical(rmres[[7]])
     net@m_w_on <- rmres[[8]]
-    return(list(net = net, count = rmres[[9]]))
+    return(list(net = net, ncount = rmres[[9]], wcount = won0 - rmres[[8]]))
 }
 
 

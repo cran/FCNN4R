@@ -88,9 +88,6 @@ mlp_prune_mag <- function(net, input, output,
                 countw <- countw - 1;
                 net <- mlp_set_w_st(net, TRUE, idx = wi)
                 net <- mlp_set_weights(net, wts)
-                if (report) {
-                    cat("pruning stopped\n")
-                }
             } else {
                 net <- retres$net
                 if (report) {
@@ -108,10 +105,14 @@ mlp_prune_mag <- function(net, input, output,
         }
         rmnres <- mlp_rm_neurons(net, report = report)
         net <- rmnres$net
-        if (plots && (rmnres$count != 0) && !stop) {
+        countn <- countn + rmnres$ncount
+        countw <- countw + rmnres$wcount
+        if ((rmnres$ncount != 0) && plots) {
             mlp_plot(net)
         }
-        countn <- countn + rmnres$count
+    }
+    if (report) {
+        cat(paste0("pruning stopped, removed ", countw, " weight(s) and ", countn, " neuron(s)\n"))
     }
     if (plots) {
         mlp_plot(net)
@@ -213,9 +214,6 @@ mlp_prune_obs <- function(net, input, output,
                 countw <- countw - 1;
                 net <- mlp_set_w_st(net, TRUE, idx = wi)
                 net <- mlp_set_weights(net, wts)
-                if (report) {
-                    cat("pruning stopped\n")
-                }
             } else {
                 net <- retres$net
                 if (report) {
@@ -233,10 +231,14 @@ mlp_prune_obs <- function(net, input, output,
         }
         rmnres <- mlp_rm_neurons(net, report = report)
         net <- rmnres$net
-        if (plots && (rmnres$count != 0) && !stop) {
+        countn <- countn + rmnres$ncount
+        countw <- countw + rmnres$wcount
+        if ((rmnres$ncount != 0) && plots) {
             mlp_plot(net)
         }
-        countn <- countn + rmnres$count
+    }
+    if (report) {
+        cat(paste0("pruning stopped, removed ", countw, " weight(s) and ", countn, " neuron(s)\n"))
     }
     if (plots) {
         mlp_plot(net)
@@ -244,18 +246,6 @@ mlp_prune_obs <- function(net, input, output,
 
     return(list(net = net, wcount = countw, ncount = countn))
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -178,11 +178,12 @@ mlp_teach_rprop <- function(net, input, output,
         gam <- min(0.1, gmax)
     }
     gamma <- rep(gam, nw)
-    dw <- rep(0, nw)
 
     for (i in 2:max_epochs) {
         # determine step and update gamma
+        dw <- rep(0, nw)
         ig0 <- (g1 > 0)
+        il0 <- (g1 < 0)
         i1 <- (g0 * g1 > 0)
         ind <- which(i1 & ig0)
         dw[ind] <- -gamma[ind]
@@ -196,9 +197,9 @@ mlp_teach_rprop <- function(net, input, output,
         i3 <- (g0 * g1 == 0)
         ind <- which(i3 & ig0)
         dw[ind] <- -gamma[ind]
-        ind <- which(i3 & !ig0)
+        ind <- which(i3 & il0)
         dw[ind] <- gamma[ind]
-        # update
+        # update weights
         w0 <- mlp_get_weights(net);
         w1 <- w0 + dw;
         net <- mlp_set_weights(net, w1)

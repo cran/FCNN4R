@@ -100,7 +100,7 @@ mlp_act_f_str(int af)
         case sym_sigmoid_approx:
             return "sym. sigmoid approx.: f(x) ~ 2*(1 + exp(-2 * s * x))^-1 - 1";
         default:
-            error("invalid activation function id");
+            throw exception("invalid activation function id");
     }
     return "";
 }
@@ -146,7 +146,7 @@ mlp_act_f(int af, const T &s, const T &x)
         case sym_sigmoid_approx:
             return tanh_app(s * x);
         default:
-            error("invalid activation function id");
+            throw exception("invalid activation function id");
     }
     return 0.;
 }
@@ -169,9 +169,9 @@ mlp_act_f_der(int af, const T &s, const T &y)
             return s * ((T) 1. - y * y);
         case threshold:
         case sym_threshold:
-            error("trying to differentiate step function");
+            throw exception("trying to differentiate step function");
         default:
-            error("invalid activation function id");
+            throw exception("invalid activation function id");
     }
     return (T) 0.;
 }

@@ -13,9 +13,10 @@ mlp_rm_neurons(net, report = FALSE)
        will be printed on the console (FALSE by default)}
 }
 \value{
-Two-element list. The first element (\code{net}) is the network
+Three-element list. The first element (\code{net}) is the network
         (an object of \code{mlp_net} class) with all redundant neurons
-        removed, the second (\code{count}) - the number of neurons removed.
+        removed, the second (\code{ncount}) - the number of neurons removed,
+        the third (\code{wcount}) - the number of weights removed.
 }
 \description{
 This function removes redundant neurons from the network, i.e. hidden layers'
