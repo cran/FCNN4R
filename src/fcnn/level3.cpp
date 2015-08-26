@@ -19,7 +19,8 @@
  */
 
 /** \file level3.cpp
- *  \brief Level 3 operations: evaluation, MSE, and gradients.
+ *  \brief Level 3 operations: evaluation, MSE, and gradients plus
+ *  Hessian inverse update used in OBS.
  */
 
 
@@ -27,6 +28,17 @@
 #include <fcnn/level1.h>
 #include <fcnn/level2.h>
 #include <fcnn/level3.h>
+#include <fcnn/report.h>
+#include <fcnn/utils.h>
+#ifdef R_DLL
+#include <Rconfig.h>
+#if defined(SUPPORT_OPENMP)
+#define HAVE_OPENMP 1
+#endif /* defined(SUPPORT_OPENMP) */
+#endif /* R_DLL */
+#if defined(HAVE_OPENMP)
+#include <omp.h>
+#endif /* defined(HAVE_OPENMP) */
 
 
 using namespace fcnn::internal;
@@ -43,10 +55,41 @@ fcnn::internal::eval(const int *lays, int no_lays, const int *n_pts,
         no_inputs = lays[0],
         no_outputs = lays[no_lays - 1];
 
+#if defined(HAVE_OPENMP)
+    std::vector<std::vector<T> > workv;
+    T *work;
+    int nth = 1, chsz = 1;
+    #pragma omp parallel default(shared)
+    {
+    #pragma omp single
+    {
+        nth = omp_get_num_threads();
+        if (nth > no_datarows) {
+            nth = no_datarows;
+            omp_set_num_threads(nth);
+        } else {
+            chsz = no_datarows / nth;
+            if (no_datarows % nth) ++chsz;
+        }
+        for (int i = 0; i < nth; ++i) {
+            workv.push_back(std::vector<T>(no_neurons));
+        }
+    }
+#else /* defined(HAVE_OPENMP) */
     std::vector<T> workv(no_neurons);
     T *work = &workv[0];
-
+#endif /* defined(HAVE_OPENMP) */
+#if defined(HAVE_OPENMP)
+    int i, ith;
+    #pragma omp for schedule(static, chsz) private(i, ith, work)
+    for (i = 0; i < no_datarows; ++i) {
+#else /* defined(HAVE_OPENMP) */
     for (int i = 0; i < no_datarows; ++i) {
+#endif /* defined(HAVE_OPENMP) */
+#if defined(HAVE_OPENMP)
+        ith = omp_get_thread_num();
+        work = &workv[ith][0];
+#endif /* defined(HAVE_OPENMP) */
         // copy input
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
@@ -56,6 +99,9 @@ fcnn::internal::eval(const int *lays, int no_lays, const int *n_pts,
         // copy output
         copy(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows);
     }
+#if defined(HAVE_OPENMP)
+    } /* #pragma omp parallel */
+#endif /* defined(HAVE_OPENMP) */
 }
 
 
@@ -72,10 +118,43 @@ fcnn::internal::mse(const int *lays, int no_lays, const int *n_pts,
 
     T se = T();
 
+#if defined(HAVE_OPENMP)
+    std::vector<std::vector<T> > workv;
+    T *work;
+    int nth = 1, chsz = 1;
+    #pragma omp parallel default(shared)
+    {
+    #pragma omp single
+    {
+        nth = omp_get_num_threads();
+        if (nth > no_datarows) {
+            nth = no_datarows;
+            omp_set_num_threads(nth);
+        } else {
+            chsz = no_datarows / nth;
+            if (no_datarows % nth) ++chsz;
+        }
+        for (int i = 0; i < nth; ++i) {
+            workv.push_back(std::vector<T>(no_neurons));
+        }
+    }
+#else /* defined(HAVE_OPENMP) */
     std::vector<T> workv(no_neurons);
     T *work = &workv[0];
-
+#endif /* defined(HAVE_OPENMP) */
+#if defined(HAVE_OPENMP)
+    int i, ith;
+    #pragma omp for schedule(static, chsz) \
+        private(i, ith, work) \
+        reduction(+:se)
+    for (i = 0; i < no_datarows; ++i) {
+#else /* defined(HAVE_OPENMP) */
     for (int i = 0; i < no_datarows; ++i) {
+#endif /* defined(HAVE_OPENMP) */
+#if defined(HAVE_OPENMP)
+        ith = omp_get_thread_num();
+        work = &workv[ith][0];
+#endif /* defined(HAVE_OPENMP) */
         // copy input
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
@@ -83,12 +162,14 @@ fcnn::internal::mse(const int *lays, int no_lays, const int *n_pts,
               w_val, hl_af, hl_af_p, ol_af, ol_af_p,
               work);
         // update se
-        se += sumsqerr(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows);
+        se += sumsqdiff(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows);
     }
+#if defined(HAVE_OPENMP)
+    } /* #pragma omp parallel */
+#endif /* defined(HAVE_OPENMP) */
 
     return (T).5 * se / ((T)no_datarows * (T)no_outputs);
 }
-
 
 
 
@@ -103,31 +184,78 @@ fcnn::internal::grad(const int *lays, int no_lays, const int *n_pts,
         no_inputs = lays[0],
         no_outputs = lays[no_lays - 1],
         no_weights = w_pts[no_lays];
-
     T se = T();
-    std::vector<T> workv(no_neurons),
-                   deltav(no_weights, T()), gradv(no_weights, T());
+#if defined(HAVE_OPENMP)
+    std::vector<std::vector<T> > workv, deltav, gradv;
+    T *work, *delta, *grad;
+    int nth = 1, chsz = 1;
+    #pragma omp parallel default(shared)
+    {
+    #pragma omp single
+    {
+        nth = omp_get_num_threads();
+        if (nth > no_datarows) {
+            nth = no_datarows;
+            omp_set_num_threads(nth);
+        } else {
+            chsz = no_datarows / nth;
+            if (no_datarows % nth) ++chsz;
+        }
+        for (int i = 0; i < nth; ++i) {
+            workv.push_back(std::vector<T>(no_neurons));
+            deltav.push_back(std::vector<T>(no_neurons));
+            gradv.push_back(std::vector<T>(no_weights));
+        }
+    }
+#else /* defined(HAVE_OPENMP) */
+    std::vector<T> workv(no_neurons), deltav(no_neurons),
+                   gradv(no_weights);
     T *work = &workv[0], *delta = &deltav[0], *grad = &gradv[0];
+#endif /* defined(HAVE_OPENMP) */
     // loop over records
+#if defined(HAVE_OPENMP)
+    int i, ith;
+    #pragma omp for schedule(static, chsz) \
+        private(i, ith, work, delta, grad) \
+        reduction(+:se)
+    for (i = 0; i < no_datarows; ++i) {
+#else /* defined(HAVE_OPENMP) */
     for (int i = 0; i < no_datarows; ++i) {
+#endif /* defined(HAVE_OPENMP) */
+#if defined(HAVE_OPENMP)
+        ith = omp_get_thread_num();
+        // set deltas to zero
+        deltav[ith].assign(no_neurons, T());
+        work = &workv[ith][0];
+        delta = &deltav[ith][0];
+        grad = &gradv[ith][0];
+#else /* defined(HAVE_OPENMP) */
+        // set deltas to zero
+        deltav.assign(no_neurons, T());
+#endif /* defined(HAVE_OPENMP) */
         // copy input
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
         feedf(lays, no_lays, n_pts,
               w_val, hl_af, hl_af_p, ol_af, ol_af_p,
               work);
-        // update se
-        se += sumsqerr(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows);
         // init deltas
-        copy(no_outputs, work + n_pts[no_lays - 1], 1, delta + n_pts[no_lays - 1], 1);
-        axpy(no_outputs, -1., out + i, no_datarows, delta + n_pts[no_lays - 1], 1);
+        diff(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows,
+             delta + n_pts[no_lays - 1], 1);
+        // update se
+        se += sumsq(no_outputs, delta + n_pts[no_lays - 1], 1);
         // backpropagation
         backprop(lays, no_lays, n_pts,
                  no_weights, w_val, hl_af, hl_af_p, ol_af, ol_af_p,
                  work, delta, grad);
-        // set deltas to zero
-        if (i != (no_datarows - 1)) deltav.assign(no_weights, T());
     }
+#if defined(HAVE_OPENMP)
+    } /* #pragma omp parallel */
+    for (int th = 1; th < nth; ++th) {
+        axpy(no_weights, 1., &gradv[th][0], 1, &gradv[0][0], 1);
+    }
+    grad = &gradv[0][0];
+#endif /* defined(HAVE_OPENMP) */
 
     // get derivatives for active weights
     for (int i = 0, j = 0, n = no_weights; i < n; ++i)
@@ -151,8 +279,8 @@ fcnn::internal::gradi(const int *lays, int no_lays, const int *n_pts,
         no_outputs = lays[no_lays - 1],
         no_weights = w_pts[no_lays];
 
-    std::vector<T> workv(no_neurons),
-                   deltav(no_weights, T()), gradv(no_weights, T());
+    std::vector<T> workv(no_neurons), deltav(no_neurons, T()),
+                   gradv(no_weights, T());
     T *work = &workv[0], *delta = &deltav[0], *grad = &gradv[0];
     // copy input
     copy(no_inputs, in + i, no_datarows, work, 1);
@@ -161,8 +289,8 @@ fcnn::internal::gradi(const int *lays, int no_lays, const int *n_pts,
           w_val, hl_af, hl_af_p, ol_af, ol_af_p,
           work);
     // init deltas
-    copy(no_outputs, work + n_pts[no_lays - 1], 1, delta + n_pts[no_lays - 1], 1);
-    axpy(no_outputs, -1., out + i, no_datarows, delta + n_pts[no_lays - 1], 1);
+    diff(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows,
+            delta + n_pts[no_lays - 1], 1);
     // backpropagation
     backprop(lays, no_lays, n_pts,
              no_weights, w_val, hl_af, hl_af_p, ol_af, ol_af_p,
@@ -185,13 +313,14 @@ fcnn::internal::gradij(const int *lays, int no_lays, const int *n_pts,
 {
     int no_neurons = n_pts[no_lays],
         no_inputs = lays[0],
+        no_outputs = lays[no_lays - 1],
         no_weights = w_pts[no_lays];
 
-    std::vector<T> workv(no_neurons),
-                   deltav(no_weights, T()), gradv(no_weights, T());
+    std::vector<T> workv(no_neurons), deltav(no_neurons, T()),
+                   gradv(no_weights, T());
     T *work = &workv[0], *delta = &deltav[0], *grad = &gradv[0];
     // loop over output neurons
-    for (int j = 0; j < lays[no_lays - 1]; ++j) {
+    for (int j = 0; j < no_outputs; ++j) {
         // copy input
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
@@ -208,8 +337,8 @@ fcnn::internal::gradij(const int *lays, int no_lays, const int *n_pts,
         for (int ii = 0, k = 0, n = no_weights; ii < n; ++ii)
             if (w_fl[ii]) gr[j * no_w_on + k++] = grad[ii];
         // set deltas and gradients to zero
-        if (j < lays[no_lays - 1] - 1) {
-            deltav.assign(no_weights, T());
+        if (j < no_outputs - 1) {
+            deltav.assign(no_neurons, T());
             gradv.assign(no_weights, T());
         }
     }
@@ -217,8 +346,149 @@ fcnn::internal::gradij(const int *lays, int no_lays, const int *n_pts,
 
 
 
+
+template <typename T>
+void
+fcnn::internal::jacob(const int *lays, int no_lays, const int *n_pts,
+                      const int *w_pts, const int *w_fl, const T *w_val, int no_w_on,
+                      int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+                      int no_datarows, int i, const T *in, T *jac)
+{
+    int no_neurons = n_pts[no_lays],
+        no_inputs = lays[0],
+        no_outputs = lays[no_lays - 1];
+
+    std::vector<T> workv(no_neurons), deltav(no_neurons, T());
+    T *work = &workv[0], *delta = &deltav[0];
+    // loop over output neurons
+    for (int j = 0; j < no_outputs; ++j) {
+        // copy input
+        copy(no_inputs, in + i, no_datarows, work, 1);
+        // feed forward
+        feedf(lays, no_lays, n_pts,
+              w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+              work);
+        // init jth output neuron's delta
+        delta[n_pts[no_lays - 1] + j] = 1;
+        // backpropagation
+        backpropjd(lays, no_lays, n_pts, j,
+                   w_pts, w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+                   work, delta);
+        // copy gradient
+        for (int ii = 0; ii < no_inputs; ++ii)
+             jac[j * no_inputs + ii] = delta[ii];
+        // set deltas to zero
+        if (j < no_outputs - 1) {
+            deltav.assign(no_neurons, T());
+        }
+    }
+}
+
+
+#if defined(R_DLL)
+#define HAVE_BLAS
+#include <R_ext/RS.h>
+#define F77_FUNC(name,NAME) F77_NAME(name)
+#endif /* defined(R_DLL) */
+
+
+#if defined(HAVE_BLAS)
+extern "C" {
+void
+F77_FUNC(sgemv,SGEMV)(char *trans, int *M, int *N, float *alpha,
+                      const float* A, int *lda,
+                      const float* x, int *incx,
+                      float *beta, float* y, int *incy);
+void
+F77_FUNC(dgemv,DGEMV)(char *trans, int *M, int *N, double *alpha,
+                      const double* A, int *lda,
+                      const double* x, int *incx,
+                      double *beta, double* y, int *incy);
+void
+F77_FUNC(sger,SGER)(int *M, int *N, float *alpha,
+                    const float *x, int *incx, const float *y, int *incy,
+                    float *A, int *lda);
+void
+F77_FUNC(dger,DGER)(int *M, int *N, double *alpha,
+                    const double *x, int *incx, const double *y, int *incy,
+                    double *A, int *lda);
+} /* extern "C" */
+
+
+inline
+void
+gemv(char trans, int M, int N, float alpha,
+     const float* A, int lda,
+     const float* x, int incx,
+     float beta, float* y, int incy)
+{
+    F77_FUNC(sgemv,SGEMV)(&trans, &M, &N,
+                          &alpha, A, &lda, x, &incx,
+                          &beta, y, &incy);
+}
+
+
+inline
+void
+gemv(char trans, int M, int N, double alpha,
+     const double* A, int lda,
+     const double* x, int incx,
+     double beta, double* y, int incy)
+{
+    F77_FUNC(dgemv,DGEMV)(&trans, &M, &N,
+                          &alpha, A, &lda, x, &incx,
+                          &beta, y, &incy);
+}
+
+
+inline
+void
+ger(int M, int N, float alpha,
+    const float *x, int incx, const float *y, int incy,
+    float *A, int lda)
+{
+    F77_FUNC(sger,SGER)(&M, &N, &alpha,
+                        x, &incx, y, &incy,
+                        A, &lda);
+}
+
+
+inline
+void
+ger(int M, int N, double alpha,
+    const double *x, int incx, const double *y, int incy,
+    double *A, int lda)
+{
+    F77_FUNC(dger,DGER)(&M, &N, &alpha,
+                        x, &incx, y, &incy,
+                        A, &lda);
+}
+
+
+
+template <typename T>
+void
+fcnn::internal::ihessupdate(int nw, int no, T a, const T *g, T *H)
+{
+    std::vector<T> HXv(nw);
+    T *HX = &HXv[0];
+    const T *X = g;
+    char notr = 'N';
+    T alpha, one = 1., zero = 0.;
+    for (int j = 0; j < no; ++j, X += nw) {
+        gemv(notr, nw, nw, one, H, nw, X, 1, zero, HX, 1);
+        alpha = (T)-1. / (a + dot(nw, X, 1, HX, 1));
+        ger(nw, nw, alpha, HX, 1, HX, 1, H, nw);
+    }
+}
+
+
+#endif /* defined(HAVE_BLAS) */
+
+
+
 // Explicit instantiations
-#ifndef FCNN_DOUBLE_ONLY
+#if !defined(FCNN_DOUBLE_ONLY)
 template void fcnn::internal::eval(const int*, int, const int*,
                                    const float*, int, float, int, float,
                                    int, const float*, float*);
@@ -237,7 +507,14 @@ template void fcnn::internal::gradij(const int*, int, const int*,
                                      const int*, const int*, const float*, int,
                                      int, float, int, float,
                                      int, int, const float*, float*);
-#endif /* FCNN_DOUBLE_ONLY */
+template void fcnn::internal::jacob(const int*, int, const int*,
+                                    const int*, const int*, const float*, int,
+                                    int, float, int, float,
+                                    int, int, const float*, float*);
+#if defined(HAVE_BLAS)
+template void fcnn::internal::ihessupdate(int, int, float, const float*, float*);
+#endif /* defined(HAVE_BLAS) */
+#endif /* !defined(FCNN_DOUBLE_ONLY) */
 template void fcnn::internal::eval(const int*, int, const int*,
                                    const double*, int, double, int, double,
                                    int, const double*, double*);
@@ -256,4 +533,11 @@ template void fcnn::internal::gradij(const int*, int, const int*,
                                      const int*, const int*, const double*, int,
                                      int, double, int, double,
                                      int, int, const double*, double*);
+template void fcnn::internal::jacob(const int*, int, const int*,
+                                    const int*, const int*, const double*, int,
+                                    int, double, int, double,
+                                    int, int, const double*, double*);
+#if defined(HAVE_BLAS)
+template void fcnn::internal::ihessupdate(int, int, double, const double*, double*);
+#endif /* defined(HAVE_BLAS) */
 

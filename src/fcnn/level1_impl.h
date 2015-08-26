@@ -32,53 +32,54 @@ namespace internal {
 
 
 template <typename T, int N>
-struct DOT {
-    static inline T eval(const T* x, const T* y) {
-        return *x * *y + DOT<T, N - 1>::eval(x + 1, y + 1);
+struct DOT_BLOCK {
+    static inline T dot(const T* x, int incx, const T* y, int incy) {
+        return *x * *y + DOT_BLOCK<T, N - 1>::dot(x + incx, incx, y + incy, incy);
     }
 };
 
 
 template <typename T>
-struct DOT<T, 1> {
-    static inline T eval(const T* x, const T* y) {
+struct DOT_BLOCK<T, 1> {
+    static inline T dot(const T* x, int incx, const T* y, int incy) {
         return *x * *y;
     }
 };
 
 template <typename T, int N>
 struct DOT_SWITCH {
-    static inline T eval(int n, const T* x, const T* y) {
-        if (n == N) return DOT<T, N>::eval(x, y);
-        else return DOT_SWITCH<T, N - 1>::eval(n, x, y);
+    static inline T dot(int n, const T* x, int incx, const T* y, int incy) {
+        if (n == N) return DOT_BLOCK<T, N>::dot(x, incx, y, incy);
+        else return DOT_SWITCH<T, N - 1>::dot(n, x, incx, y, incy);
     }
 };
 
 template <typename T>
 struct DOT_SWITCH<T, 0> {
-    static inline T eval(int n, const T* x, const T* y) {
+    static inline T dot(int n, const T* x, int incx, const T* y, int incy) {
         return T();
     }
 };
 
 template <typename T, int N>
 struct DOT_UNROLL {
-    static inline T eval(int k, const T* x, const T* y) {
+    static inline T dot(int k, const T* x, int incx, const T* y, int incy) {
         T s = T();
-        for (int i = 0; i < k; ++i, x += N, y += N)
-            s += DOT<T, N>::eval(x, y);
+        int incxN = incx * N, incyN = incy * N;
+        for (int i = 0; i < k; ++i, x += incxN, y += incyN)
+            s += DOT_BLOCK<T, N>::dot(x, incx, y, incy);
         return s;
     }
 };
 
 template <typename T, int N>
-struct DOT_PROD {
-    static inline T eval(int n, const T* x, const T* y) {
-        if (n > N)  {
+struct DOT {
+    static inline T dot(int n, const T* x, int incx, const T* y, int incy) {
+        if (n >= N)  {
             int k = n / N, kr = n % N;
-            return DOT_UNROLL<T, N>::eval(k, x, y)
-                   + DOT_SWITCH<T, N>::eval(kr, x + n - kr, y + n - kr);
-        } else return DOT_SWITCH<T, N>::eval(n, x, y);
+            return DOT_UNROLL<T, N>::dot(k, x, incx, y, incy)
+                   + DOT_SWITCH<T, N - 1>::dot(kr, x + (n - kr) * incx, incx, y + (n - kr) * incy, incy);
+        } else return DOT_SWITCH<T, N - 1>::dot(n, x, incx, y, incy);
     }
 };
 
@@ -120,8 +121,8 @@ struct COPY_SWITCH<T, 0> {
 template <typename T, int N>
 struct COPY_UNROLL {
     static inline void copy(int k, const T* x, int incx, T* y, int incy) {
-        int incaN = incx * N, incbN = incy * N;
-        for (int i = 0; i < k; ++i, x += incaN, y += incbN)
+        int incxN = incx * N, incyN = incy * N;
+        for (int i = 0; i < k; ++i, x += incxN, y += incyN)
             COPY_BLOCK<T, N>::copy(x, incx, y, incy);
     }
 };
@@ -129,11 +130,11 @@ struct COPY_UNROLL {
 template <typename T, int N>
 struct COPY {
     static inline void copy(int n, const T* x, int incx, T* y, int incy) {
-        if (n > N) {
+        if (n >= N)  {
             int k = n / N, kr = n % N;
             COPY_UNROLL<T, N>::copy(k, x, incx, y, incy);
-            COPY_SWITCH<T, N>::copy(kr, x + (n - kr) * incx, incx, y + (n - kr) * incy, incy);
-        } else COPY_SWITCH<T, N>::copy(n, x, incx, y, incy);
+            COPY_SWITCH<T, N - 1>::copy(kr, x + (n - kr) * incx, incx, y + (n - kr) * incy, incy);
+        } else COPY_SWITCH<T, N - 1>::copy(n, x, incx, y, incy);
     }
 };
 
@@ -184,11 +185,74 @@ struct AXPY_UNROLL {
 template <typename T, int N>
 struct AXPY {
     static inline void axpy(int n, const T &a, const T* x, int incx, T* y, int incy) {
-        if (n > N) {
+        if (n >= N) {
             int k = n / N, kr = n % N;
             AXPY_UNROLL<T, N>::axpy(k, a, x, incx, y, incy);
-            AXPY_SWITCH<T, N>::axpy(kr, a, x + (n - kr) * incx, incx, y + (n - kr) * incy, incy);
-        } else AXPY_SWITCH<T, N>::axpy(n, a, x, incx, y, incy);
+            AXPY_SWITCH<T, N - 1>::axpy(kr, a, x + (n - kr) * incx, incx,
+                                        y + (n - kr) * incy, incy);
+        } else AXPY_SWITCH<T, N - 1>::axpy(n, a, x, incx, y, incy);
+    }
+};
+
+
+
+
+
+
+template <typename T, int N>
+struct DIFF_BLOCK {
+    static inline void diff(const T* x, int incx, const T* y, int incy,
+                            T* z, int incz) {
+        *z = *x - *y;
+        DIFF_BLOCK<T, N - 1>::diff(x + incx, incx, y + incy, incy, z + incz, incz);
+    }
+};
+
+template <typename T>
+struct DIFF_BLOCK<T, 1> {
+    static inline void diff(const T* x, int incx, const T* y, int incy,
+                            T* z, int incz) {
+        *z = *x - *y;
+    }
+};
+
+template <typename T, int N>
+struct DIFF_SWITCH {
+    static inline void diff(int n, const T* x, int incx, const T* y, int incy,
+                            T* z, int incz) {
+        if (n == N) DIFF_BLOCK<T, N>::diff(x, incx, y, incy, z, incz); else
+        DIFF_SWITCH<T, N - 1>::diff(n, x, incx, y, incy, z, incz);
+    }
+};
+
+template <typename T>
+struct DIFF_SWITCH<T, 0> {
+    static inline void diff(int n, const T* x, int incx, const T* y, int incy, T* z, int incz) {
+        ;
+    }
+};
+
+template <typename T, int N>
+struct DIFF_UNROLL {
+    static inline void diff(int k, const T* x, int incx, const T* y, int incy,
+                            T* z, int incz) {
+        int incxN = incx * N, incyN = incy * N, inczN = incz * N;
+        for (int i = 0; i < k; ++i, x += incxN, y += incyN, z += inczN)
+            DIFF_BLOCK<T, N>::diff(x, incx, y, incy, z, incz);
+    }
+};
+
+template <typename T, int N>
+struct DIFF {
+    static inline void diff(int n, const T* x, int incx, const T* y, int incy,
+                            T* z, int incz) {
+        if (n >= N)  {
+            int k = n / N, kr = n % N;
+            DIFF_UNROLL<T, N>::diff(k, x, incx, y, incy, z, incz);
+            DIFF_SWITCH<T, N - 1>::diff(kr, x + (n - kr) * incx, incx,
+                                        y + (n - kr) * incy, incy,
+                                        z + (n - kr) * incz, incz);
+        } else DIFF_SWITCH<T, N - 1>::diff(n, x, incx, y, incy, z, incz);
     }
 };
 
@@ -199,56 +263,109 @@ struct AXPY {
 
 
 template <typename T, int N>
-struct SMSQERR {
-    static inline T eval(const T* x, int incx, const T* y, int incy) {
+struct SMSQDIFF {
+    static inline T sumsqdiff(const T* x, int incx, const T* y, int incy) {
         T d = *x - *y;
-        return d * d + SMSQERR<T, N - 1>::eval(x + incx, incx, y + incy, incy);
+        return d * d + SMSQDIFF<T, N - 1>::sumsqdiff(x + incx, incx, y + incy, incy);
     }
 };
 
 template <typename T>
-struct SMSQERR<T, 1> {
-    static inline T eval(const T* x, int incx, const T* y, int incy) {
+struct SMSQDIFF<T, 1> {
+    static inline T sumsqdiff(const T* x, int incx, const T* y, int incy) {
         T d = *x - *y;
         return d * d;
     }
 };
 
 template <typename T, int N>
-struct SUMSQERR_SWITCH {
-    static inline T eval(int n, const T* x, int incx, const T* y, int incy) {
-        if (n == N) return SMSQERR<T, N>::eval(x, incx, y, incy);
-        else return SUMSQERR_SWITCH<T, N - 1>::eval(n, x, incx, y, incy);
+struct SUMSQDIFF_SWITCH {
+    static inline T sumsqdiff(int n, const T* x, int incx, const T* y, int incy) {
+        if (n == N) return SMSQDIFF<T, N>::sumsqdiff(x, incx, y, incy);
+        else return SUMSQDIFF_SWITCH<T, N - 1>::sumsqdiff(n, x, incx, y, incy);
     }
 };
 
 template <typename T>
-struct SUMSQERR_SWITCH<T, 0> {
-    static inline T eval(int n, const T* x, int incx, const T* y, int incy) {
+struct SUMSQDIFF_SWITCH<T, 0> {
+    static inline T sumsqdiff(int n, const T* x, int incx, const T* y, int incy) {
         return T();
     }
 };
 
 template <typename T, int N>
-struct SUMSQERR_UNROLL {
-    static inline T eval(int k, const T* x, int incx, const T* y, int incy) {
+struct SUMSQDIFF_UNROLL {
+    static inline T sumsqdiff(int k, const T* x, int incx, const T* y, int incy) {
         T s = T();
-        int incaN = incx * N, incbN = incy * N;
-        for (int i = 0; i < k; ++i, x += incaN, y += incbN)
-            s += SMSQERR<T, N>::eval(x, incx, y, incy);
+        int incxN = incx * N, incyN = incy * N;
+        for (int i = 0; i < k; ++i, x += incxN, y += incyN)
+            s += SMSQDIFF<T, N>::sumsqdiff(x, incx, y, incy);
         return s;
     }
 };
 
 template <typename T, int N>
-struct SUMSQERR {
-    static inline T eval(int n, const T* x, int incx, const T* y, int incy) {
-        if (n > N)  {
+struct SUMSQDIFF {
+    static inline T sumsqdiff(int n, const T* x, int incx, const T* y, int incy) {
+        if (n >= N)  {
             int k = n / N, kr = n % N;
-            return SUMSQERR_UNROLL<T, N>::eval(k, x, incx, y, incy)
-            + SUMSQERR_SWITCH<T, N>::eval(kr, x + (n - kr) * incx, incx,
+            return SUMSQDIFF_UNROLL<T, N>::sumsqdiff(k, x, incx, y, incy)
+            + SUMSQDIFF_SWITCH<T, N - 1>::sumsqdiff(kr, x + (n - kr) * incx, incx,
                                        y + (n - kr) * incy, incy);
-        } else return SUMSQERR_SWITCH<T, N>::eval(n, x, incx, y, incy);
+        } else return SUMSQDIFF_SWITCH<T, N - 1>::sumsqdiff(n, x, incx, y, incy);
+    }
+};
+
+
+template <typename T, int N>
+struct SUMSQ_BLOCK {
+    static inline T sumsq(const T* x, int incx) {
+        return *x * *x + SUMSQ_BLOCK<T, N - 1>::sumsq(x + incx, incx);
+    }
+};
+
+
+template <typename T>
+struct SUMSQ_BLOCK<T, 1> {
+    static inline T sumsq(const T* x, int incx) {
+        return *x * *x;
+    }
+};
+
+template <typename T, int N>
+struct SUMSQ_SWITCH {
+    static inline T sumsq(int n, const T* x, int incx) {
+        if (n == N) return SUMSQ_BLOCK<T, N>::sumsq(x, incx);
+        else return SUMSQ_SWITCH<T, N - 1>::sumsq(n, x, incx);
+    }
+};
+
+template <typename T>
+struct SUMSQ_SWITCH<T, 0> {
+    static inline T sumsq(int n, const T* x, int incx) {
+        return T();
+    }
+};
+
+template <typename T, int N>
+struct SUMSQ_UNROLL {
+    static inline T sumsq(int k, const T* x, int incx) {
+        T s = T();
+        int incxN = incx * N;
+        for (int i = 0; i < k; ++i, x += incxN)
+            s += SUMSQ_BLOCK<T, N>::sumsq(x, incx);
+        return s;
+    }
+};
+
+template <typename T, int N>
+struct SUMSQ {
+    static inline T sumsq(int n, const T* x, int incx) {
+        if (n >= N)  {
+            int k = n / N, kr = n % N;
+            return SUMSQ_UNROLL<T, N>::sumsq(k, x, incx)
+                   + SUMSQ_SWITCH<T, N - 1>::sumsq(kr, x + (n - kr) * incx, incx);
+        } else return SUMSQ_SWITCH<T, N - 1>::sumsq(n, x, incx);
     }
 };
 

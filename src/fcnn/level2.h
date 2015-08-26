@@ -19,7 +19,7 @@
  */
 
 /** \file level2.h
- *  \brief Level 2 operations: single input feed forward and backpropagation.
+ *  \brief Level 2 operations: single feed forward and backpropagation runs.
  */
 
 #ifndef FCNN_LEVEL2_H
@@ -56,6 +56,15 @@ void
 backpropj(const int *lays, int no_lays, const int *n_pts, int j,
           const int *w_pts, const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
           const T *n_st, T *delta, T *grad);
+
+
+/// Backpropagation - backpropagate error (delta) at the jth neuron the output layer
+/// to input layers without computing derivatives w.r.t. weights.
+template <typename T>
+void
+backpropjd(const int *lays, int no_lays, const int *n_pts, int j,
+           const int *w_pts, const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+           const T *n_st, T *delta);
 
 
 

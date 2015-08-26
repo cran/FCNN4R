@@ -188,11 +188,8 @@ mlp_prune_obs <- function(net, input, output,
         H <- diag(1 / alpha, nrow = W, ncol = W)
         for (i in 1:P) {
             grads <- mlp_gradij(net, input, i)
-            for (j in 1:N) {
-                X <- grads[, j]
-                HX <- H %*% X
-                H <- H - (HX %*% t(HX)) / as.numeric(PN + t(X) %*% HX)
-            }
+            H <- .C("ihessupdate", as.integer(W), as.integer(N), as.numeric(PN),
+                    grads, res = H)$res
         }
         wts <- mlp_get_weights(net)
         L <- .5 * wts^2 / diag(H)

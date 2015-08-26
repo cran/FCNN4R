@@ -127,7 +127,7 @@ setClass(Class = "mlp_net",
         m_n_next = "integer",
         m_w_pointers = "integer",
         m_w_values = "numeric",
-        m_w_flags = "logical",
+        m_w_flags = "integer",
         m_w_on = "integer",
         m_af_hl = "integer",
         m_af_hl_slope = "numeric",
@@ -180,7 +180,7 @@ mlp_net <- function(layers, name = NULL)
                   m_n_next = cres[[3]],
                   m_w_pointers = cres[[4]],
                   m_w_values = cres[[5]],
-                  m_w_flags = as.logical(cres[[6]]),
+                  m_w_flags = cres[[6]],
                   m_w_on = cres[[7]],
                   m_af_hl = 4L,
                   m_af_hl_slope = .5,
@@ -234,7 +234,7 @@ function(object)
         mlp_actvfunc2str(object@m_af_ol, object@m_af_ol_slope), "\n"))
     cat("Weights:\n")
     wg <- as.character(object@m_w_values)
-    wg[-which(object@m_w_flags)] <- "off"
+    wg[which(object@m_w_flags == 0L)] <- "off"
     cat(wg)
 })
 
@@ -443,20 +443,156 @@ mlp_rm_neurons <- function(net, report = FALSE)
                    net@m_n_next,
                    net@m_w_pointers,
                    net@m_w_values,
-                   as.integer(net@m_w_flags),
+                   net@m_w_flags,
                    net@m_w_on,
                    net@m_af_hl,
                    net@m_af_hl_slope,
                    report)
-    net@m_layers <- rmres[[1]]
-    net@m_n_pointers <- rmres[[2]]
-    net@m_n_prev <- rmres[[3]]
-    net@m_n_next <- rmres[[4]]
-    net@m_w_pointers <- rmres[[5]]
-    net@m_w_values <- rmres[[6]]
-    net@m_w_flags <- as.logical(rmres[[7]])
-    net@m_w_on <- rmres[[8]]
-    return(list(net = net, ncount = rmres[[9]], wcount = won0 - rmres[[8]]))
+    ret <- new("mlp_net",
+               m_name = net@m_name,
+               m_layers = rmres[[1]],
+               m_n_pointers = rmres[[2]],
+               m_n_prev = rmres[[3]],
+               m_n_next = rmres[[4]],
+               m_w_pointers = rmres[[5]],
+               m_w_values = rmres[[6]],
+               m_w_flags = rmres[[7]],
+               m_w_on = rmres[[8]],
+               m_af_hl = net@m_af_hl,
+               m_af_hl_slope = net@m_af_hl_slope,
+               m_af_ol = net@m_af_ol,
+               m_af_ol_slope = net@m_af_ol_slope)
+    return(list(net = ret, ncount = rmres[[9]], wcount = won0 - rmres[[8]]))
+}
+
+
+
+
+# #########################################################################
+# Combining two networks into one
+# #########################################################################
+
+#' Combining two networks into one
+#'
+#' These functions construct new network by merging two networks
+#' (they must have the same number of layers) or by connecting
+#' one network outputs to another network inputs (the numbers of output
+#' and input neurons must agree). These functions may be used in constructing
+#' deep learning networks or constructing networks with some special topologies.
+#'
+#' @param net1 an object of \code{mlp_net} class
+#' @param net2 an object of \code{mlp_net} class
+#' @param same_inputs logical, if TRUE both merged networks are assumed to take
+#'          the same inputs (they share the input layer), default is FALSE
+#'
+#' @return Both functions return an object of \code{mlp_net} class.
+#'
+#' @examples
+#'
+#' # Create two 2-2-2 networks with random weights and plot them
+#' net1 <- mlp_net(c(2, 2, 2))
+#' net1 <- mlp_rnd_weights(net1)
+#' mlp_plot(net1, TRUE)
+#' net2 <- mlp_net(c(2, 2, 2))
+#' net2 <- mlp_rnd_weights(net2)
+#' mlp_plot(net2, TRUE)
+#' # Create a 4-3-2 network with random weights and plot it
+#' net3 <- mlp_net(c(4, 3, 2))
+#' net3 <- mlp_rnd_weights(net3)
+#' mlp_plot(net3, TRUE)
+#' # Construct new network using net1, net2, and net3 and plot it
+#' net4 <- mlp_stack(mlp_merge(net1, net2), net3)
+#' mlp_plot(net4, TRUE)
+#'
+#' @name mlp_net-combining-two-networks
+#'
+#' @export
+#'
+mlp_merge <- function(net1, net2, same_inputs = FALSE)
+{
+    if (!is.mlp_net(net1)) {
+        stop("expected net1 argument to be of mlp_net class")
+    }
+    if (!is.mlp_net(net2)) {
+        stop("expected net2 argument to be of mlp_net class")
+    }
+    if (!is.logical(same_inputs)) {
+        stop("expected logical argument")
+    }
+    if ((net1@m_af_hl != net2@m_af_hl) || (net1@m_af_hl_slope != net2@m_af_hl_slope)
+        || (net1@m_af_ol != net2@m_af_ol) || (net1@m_af_ol_slope != net2@m_af_ol_slope)) {
+        stop("activation functions in networks disagree");
+    }
+    res <- .Call("mlp_merge",
+                 net1@m_layers,
+                 net1@m_w_pointers,
+                 net1@m_w_values,
+                 net1@m_w_flags,
+                 net2@m_layers,
+                 net2@m_w_pointers,
+                 net2@m_w_values,
+                 net2@m_w_flags,
+                 same_inputs)
+    net <- new("mlp_net",
+               m_name = "",
+               m_layers = res[[1]],
+               m_n_pointers = res[[2]],
+               m_n_prev = res[[3]],
+               m_n_next = res[[4]],
+               m_w_pointers = res[[5]],
+               m_w_values = res[[6]],
+               m_w_flags = res[[7]],
+               m_w_on = res[[8]],
+               m_af_hl = net1@m_af_hl,
+               m_af_hl_slope = net1@m_af_hl_slope,
+               m_af_ol = net1@m_af_ol,
+               m_af_ol_slope = net1@m_af_ol_slope)
+    return(net)
+}
+
+
+#' @rdname mlp_net-combining-two-networks
+#'
+#' @export
+#'
+mlp_stack <- function(net1, net2)
+{
+    if (!is.mlp_net(net1)) {
+        stop("expected net1 argument to be of mlp_net class")
+    }
+    if (!is.mlp_net(net2)) {
+        stop("expected net2 argument to be of mlp_net class")
+    }
+    if ((net1@m_af_hl != net1@m_af_ol) || (net1@m_af_hl_slope != net1@m_af_ol_slope)) {
+        stop("the 1st network must have the same activation functions in both hidden and output layers")
+    }
+    if ((net1@m_af_ol != net2@m_af_hl) || (net1@m_af_ol_slope != net2@m_af_hl_slope)) {
+        stop("the 1st network's activation function must agree with the 2nd network's activation function in the hidden layer(s)")
+    }
+    res <- .Call("mlp_stack",
+                 net1@m_layers,
+                 net1@m_w_pointers,
+                 net1@m_w_values,
+                 net1@m_w_flags,
+                 net2@m_layers,
+                 net2@m_w_pointers,
+                 net2@m_w_values,
+                 net2@m_w_flags)
+    net <- new("mlp_net",
+               m_name = "",
+               m_layers = res[[1]],
+               m_n_pointers = res[[2]],
+               m_n_prev = res[[3]],
+               m_n_next = res[[4]],
+               m_w_pointers = res[[5]],
+               m_w_values = res[[6]],
+               m_w_flags = res[[7]],
+               m_w_on = res[[8]],
+               m_af_hl = net1@m_af_hl,
+               m_af_hl_slope = net1@m_af_hl_slope,
+               m_af_ol = net1@m_af_ol,
+               m_af_ol_slope = net1@m_af_ol_slope)
+    return(net)
 }
 
 
@@ -524,7 +660,7 @@ mlp_export_fcnn <- function(net, fname)
         stop("invalid filename")
     }
     return(.Call("mlp_export", fname,
-                 net@m_name, net@m_layers, net@m_w_values, as.integer(net@m_w_flags),
+                 net@m_name, net@m_layers, net@m_w_values, net@m_w_flags,
                  net@m_af_hl, net@m_af_hl_slope, net@m_af_ol, net@m_af_ol_slope))
 }
 
@@ -549,7 +685,7 @@ mlp_import_fcnn <- function(fname)
                   m_n_next = impres[[5]],
                   m_w_pointers = impres[[6]],
                   m_w_values = impres[[7]],
-                  m_w_flags = as.logical(impres[[8]]),
+                  m_w_flags = impres[[8]],
                   m_w_on = impres[[9]],
                   m_af_hl = impres[[10]],
                   m_af_hl_slope = impres[[11]],
@@ -817,7 +953,7 @@ mlp_get_w_abs_idx <- function(net, idx)
     if ((idx < 1) || (idx > net@m_w_on)) {
         stop("active weight index outside bounds")
     }
-    return(.Call("mlp_get_abs_w_idx", as.integer(net@m_w_flags), as.integer(idx)))
+    return(.Call("mlp_get_abs_w_idx", net@m_w_flags, as.integer(idx)))
 }
 
 
@@ -863,15 +999,15 @@ mlp_set_w_st <- function(net, on, idx = NULL, layer = NULL, nidx = NULL, nplidx 
         idx <- mlp_get_w_idx(net, layer, nidx, nplidx)
     }
     output <- .C("mlp_set_active",
-                 as.integer(net@m_layers), as.integer(net@m_n_pointers),
-                 as.integer(net@m_n_prev), as.integer(net@m_n_next),
-                 as.integer(net@m_w_pointers), as.numeric(net@m_w_values),
-                 as.integer(net@m_w_flags), as.integer(net@m_w_on),
+                 net@m_layers, net@m_n_pointers,
+                 net@m_n_prev, net@m_n_next,
+                 net@m_w_pointers, net@m_w_values,
+                 net@m_w_flags, net@m_w_on,
                  as.integer(idx), as.integer(on))
     net@m_n_prev <- output[[3]]
     net@m_n_next <- output[[4]]
     net@m_w_values <- output[[6]]
-    net@m_w_flags <- as.logical(output[[7]])
+    net@m_w_flags <- output[[7]]
     net@m_w_on <- output[[8]]
     return(net)
 }
@@ -887,7 +1023,7 @@ mlp_set_w <- function(net, val, idx = NULL, layer = NULL, nidx = NULL, nplidx = 
     if (is.null(idx)) {
         idx <- mlp_get_w_idx(net, layer, nidx, nplidx)
     }
-    if (!net@m_w_flags[idx]) {
+    if (net@m_w_flags[idx] == 0L) {
         if (!is.null(nidx)) {
             if (nplidx != 0) {
                 stop(paste0("connection between neuron ", nidx, " in layer ", layer,
@@ -916,7 +1052,7 @@ mlp_get_w_st <- function(net, idx = NULL, layer = NULL, nidx = NULL, nplidx = NU
     if (is.null(idx)) {
         idx <- mlp_get_w_idx(net, layer, nidx, nplidx)
     }
-    if (net@m_w_flags[idx]) {
+    if (net@m_w_flags[idx] != 0L) {
         return(TRUE)
     }
     return(FALSE)
@@ -933,7 +1069,7 @@ mlp_get_w <- function(net, idx = NULL, layer = NULL, nidx = NULL, nplidx = NULL)
     if (is.null(idx)) {
         idx <- mlp_get_w_idx(net, layer, nidx, nplidx)
     }
-    if (!net@m_w_flags[idx]) {
+    if (net@m_w_flags[idx] == 0L) {
         if (!is.null(nidx)) {
             if (nplidx != 0) {
                 stop(paste0("connection between neuron ", nidx, " in layer ", layer,
@@ -971,7 +1107,7 @@ mlp_rnd_weights <- function(net, a = 0.2)
     if (!is.mlp_net(net)) {
         stop("expected net argument to be of mlp_net class")
     }
-    ind <- which(net@m_w_flags)
+    ind <- which(net@m_w_flags != 0L)
     weights <- runif(length(ind), min = -a, max = a)
     net@m_w_values[ind] <- weights
     return(net)
@@ -1006,7 +1142,7 @@ mlp_set_weights <- function(net, weights)
     if (length(weights) != net@m_w_on) {
         stop("invalid size of active weights vector")
     }
-    ind <- which(net@m_w_flags)
+    ind <- which(net@m_w_flags != 0L)
     net@m_w_values[ind] <- weights
     return(net)
 }
@@ -1021,7 +1157,7 @@ mlp_get_weights <- function(net)
     if (!is.mlp_net(net)) {
         stop("expected net argument to be of mlp_net class")
     }
-    ind <- which(net@m_w_flags)
+    ind <- which(net@m_w_flags != 0L)
     return(net@m_w_values[ind])
 }
 
@@ -1128,7 +1264,7 @@ mlp_eval <- function(net, input)
 
 
 
-#' Computing mean squared error, its gradient, and output gradients
+#' Computing mean squared error, its gradient, and output derivatives
 #'
 #' The functions use fast FCNN kernel routines and are intended for implementing
 #' teaching and pruning algorithms.
@@ -1152,6 +1288,11 @@ mlp_eval <- function(net, input)
 #' teaching algorithms using second order corrections and Optimal Brain Surgeon
 #' pruning algorithm.
 #'
+#' \code{mlp_jacob} computes the Jacobian of network outputs, i.e the derivatives
+#' of outputs w.r.t. inputs, at given data row.
+#' The derivatives of outputs are placed in subsequent columns of the returned
+#' matrix.
+#'
 #' @param net an object of \code{mlp_net} class
 #' @param input numeric matrix, each row corresponds to one input vector,
 #'        number of columns must be equal to the number of neurons
@@ -1171,6 +1312,9 @@ mlp_eval <- function(net, input)
 #' \code{mlp_gradi} returns numeric vector with gradient.
 #'
 #' \code{mlp_gradij} returns numeric matrix with gradients of outputs in
+#' consecutive columns.
+#'
+#' \code{mlp_jacob} returns numeric matrix with derivatives of outputs in
 #' consecutive columns.
 #'
 #' @name mlp_net-MSE-gradients
@@ -1208,10 +1352,10 @@ mlp_grad <- function(net, input, output)
     nrows <- dim(input)[1]
     grad <- numeric(length = net@m_w_on + 1)
     grad <- .C("mlp_grad",
-               as.integer(lays), as.integer(length(lays)), as.integer(net@m_n_pointers),
-               as.integer(net@m_w_pointers), as.integer(net@m_w_flags), as.numeric(net@m_w_values),
-               as.integer(net@m_af_hl), as.numeric(net@m_af_hl_slope),
-               as.integer(net@m_af_ol), as.numeric(net@m_af_ol_slope),
+               lays, length(lays), net@m_n_pointers,
+               net@m_w_pointers, net@m_w_flags, net@m_w_values,
+               net@m_af_hl, net@m_af_hl_slope,
+               net@m_af_ol, net@m_af_ol_slope,
                as.integer(nrows), as.numeric(input), as.numeric(output),
                res = grad)$res
     mse <- grad[1]
@@ -1233,10 +1377,10 @@ mlp_gradi <- function(net, input, output, i)
     nrows <- dim(input)[1]
     grad <- numeric(length = net@m_w_on)
     grad <- .C("mlp_gradi",
-               as.integer(lays), as.integer(length(lays)), as.integer(net@m_n_pointers),
-               as.integer(net@m_w_pointers), as.integer(net@m_w_flags), as.numeric(net@m_w_values),
-               as.integer(net@m_af_hl), as.numeric(net@m_af_hl_slope),
-               as.integer(net@m_af_ol), as.numeric(net@m_af_ol_slope),
+               lays, length(lays), net@m_n_pointers,
+               net@m_w_pointers, net@m_w_flags, net@m_w_values,
+               net@m_af_hl, net@m_af_hl_slope,
+               net@m_af_ol, net@m_af_ol_slope,
                as.integer(nrows), as.integer(i), as.numeric(input), as.numeric(output),
                res = grad)$res
     return(grad)
@@ -1256,15 +1400,41 @@ mlp_gradij <- function(net, input, i)
     nrows <- dim(input)[1]
     grad <- matrix(0, nrow = net@m_w_on, ncol = nout)
     grad <- .C("mlp_gradij",
-               as.integer(lays), as.integer(length(lays)), as.integer(net@m_n_pointers),
-               as.integer(net@m_w_pointers), as.integer(net@m_w_flags),
-               as.numeric(net@m_w_values), as.integer(net@m_w_on),
-               as.integer(net@m_af_hl), as.numeric(net@m_af_hl_slope),
-               as.integer(net@m_af_ol), as.numeric(net@m_af_ol_slope),
+               lays, length(lays), net@m_n_pointers,
+               net@m_w_pointers, net@m_w_flags,
+               net@m_w_values, net@m_w_on,
+               net@m_af_hl, net@m_af_hl_slope,
+               net@m_af_ol, net@m_af_ol_slope,
                as.integer(nrows), as.integer(i), as.numeric(input),
                res = grad)$res
     dim(grad) <- c(net@m_w_on, nout)
     return(grad)
+}
+
+
+
+#' @rdname mlp_net-MSE-gradients
+#'
+#' @export
+#'
+mlp_jacob <- function(net, input, i)
+{
+    mlp_check_inout(net, input, i = i)
+    lays <- net@m_layers
+    nin <- lays[1]
+    nout <- lays[length(lays)]
+    nrows <- dim(input)[1]
+    jacob <- matrix(0, nrow = nin, ncol = nout)
+    jacob <- .C("mlp_jacob",
+                lays, length(lays), net@m_n_pointers,
+                net@m_w_pointers, net@m_w_flags,
+                net@m_w_values, net@m_w_on,
+                net@m_af_hl, net@m_af_hl_slope,
+                net@m_af_ol, net@m_af_ol_slope,
+                as.integer(nrows), as.integer(i), as.numeric(input),
+                res = jacob)$res
+    dim(jacob) <- c(nin, nout)
+    return(jacob)
 }
 
 

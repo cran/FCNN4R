@@ -76,6 +76,34 @@ int mlp_rm_neurons(std::vector<int> &layers,
                    bool report);
 
 
+/// Merge two networks (they must have the same number of layers)
+template <typename T>
+void mlp_merge(const std::vector<int> &Alayers, const std::vector<int> &Aw_p,
+               const std::vector<T> &Aw_val, const std::vector<int> &Aw_fl,
+               const std::vector<int> &Blayers, const std::vector<int> &Bw_p,
+               const std::vector<T> &Bw_val, const std::vector<int> &Bw_fl,
+               bool same_inputs,
+               std::vector<int> &layers, std::vector<int> &n_p,
+               std::vector<int> &n_prev, std::vector<int> &n_next,
+               std::vector<int> &w_p, std::vector<T> &w_val,
+               std::vector<int> &w_fl, int &w_on);
+
+
+/// Connect one network outputs to another network inputs (the numbers of output
+/// and input neurons must agree)
+template <typename T>
+void mlp_stack(const std::vector<int> &Alayers, const std::vector<int> &Aw_p,
+               const std::vector<T> &Aw_val, const std::vector<int> &Aw_fl,
+               const std::vector<int> &Blayers, const std::vector<int> &Bw_p,
+               const std::vector<T> &Bw_val, const std::vector<int> &Bw_fl,
+               std::vector<int> &layers, std::vector<int> &n_p,
+               std::vector<int> &n_prev, std::vector<int> &n_next,
+               std::vector<int> &w_p, std::vector<T> &w_val,
+               std::vector<int> &w_fl, int &w_on);
+
+
+
+
 /// Save network in a text file
 template <typename T>
 bool mlp_save_txt(const std::string &fname,

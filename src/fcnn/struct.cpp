@@ -296,6 +296,257 @@ template int fcnn::internal::mlp_rm_neurons(std::vector<int>&, std::vector<int>&
                                             int, double, bool);
 
 
+
+
+
+template <typename T>
+void
+fcnn::internal::mlp_merge(const std::vector<int> &Alayers,
+                          const std::vector<int> &Aw_p,
+                          const std::vector<T> &Aw_val,
+                          const std::vector<int> &Aw_fl,
+                          const std::vector<int> &Blayers,
+                          const std::vector<int> &Bw_p,
+                          const std::vector<T> &Bw_val,
+                          const std::vector<int> &Bw_fl,
+                          bool same_inputs,
+                          std::vector<int> &layers,
+                          std::vector<int> &n_p,
+                          std::vector<int> &n_prev,
+                          std::vector<int> &n_next,
+                          std::vector<int> &w_p,
+                          std::vector<T> &w_val,
+                          std::vector<int> &w_fl,
+                          int &w_on)
+{
+    // layers
+    int nol = Alayers.size();
+    // layers
+    if (nol != Blayers.size())
+        throw exception("numbers of layers disagree");
+    layers.resize(nol);
+    if (same_inputs) {
+        if (Alayers[0] != Blayers[0])
+            throw exception("numbers of neurons in the input layers disagree");
+        layers[0] = Alayers[0];
+    } else {
+        layers[0] = Alayers[0] + Blayers[0];
+    }
+    for (int i = 1; i < nol; ++i)
+        layers[i] = Alayers[i] + Blayers[i];
+
+    // neurons
+    n_p.assign(nol + 1, 0);
+    for (int i = 0; i < nol; ++i) {
+        n_p[i + 1] = n_p[i] + layers[i];
+    }
+
+    // weights
+    w_p.assign(nol + 1, 0);
+    for (int i = 1; i < nol; ++i)
+        w_p[i + 1] = w_p[i] + layers[i] * (layers[i - 1] + 1);
+    w_val.assign(w_p[nol], 0.);
+    w_fl.assign(w_p[nol], 0);
+
+    // weights, active connection count, and neuron connection info
+    w_on = 0;
+    n_prev.assign(n_p[nol], 0);
+    n_next.assign(n_p[nol], 0);
+    int l = 0;
+    if (same_inputs) {
+        l = 1;
+        int wi = w_p[l], ni = n_p[l];
+        for (int niA = 0, wiA = Aw_p[l]; niA < Alayers[l]; ++niA, ++ni) {
+            w_fl[wi] = Aw_fl[wiA];
+            if (w_fl[wi]) {
+                w_val[wi] = Aw_val[wiA];
+                ++w_on;
+            }
+            ++wi; ++wiA;
+            for (int npi = 0; npi < layers[0]; ++npi, ++wiA, ++wi) {
+                w_fl[wi] = Aw_fl[wiA];
+                if (w_fl[wi]) {
+                    ++w_on;
+                    ++n_prev[ni];
+                    ++n_next[npi];
+                    w_val[wi] = Aw_val[wiA];
+                }
+            }
+        }
+        for (int niB = 0, wiB = Bw_p[l]; niB < Blayers[l]; ++niB, ++ni) {
+            w_fl[wi] = Bw_fl[wiB];
+            if (w_fl[wi]) {
+                w_val[wi] = Bw_val[wiB];
+                ++w_on;
+            }
+            ++wiB; ++wi;
+            for (int npi = 0; npi < layers[0]; ++npi, ++wiB, ++wi) {
+                w_fl[wi] = Bw_fl[wiB];
+                if (w_fl[wi]) {
+                    ++w_on;
+                    ++n_prev[ni];
+                    ++n_next[npi];
+                    w_val[wi] = Bw_val[wiB];
+                }
+            }
+        }
+    }
+    for (++l; l < nol; ++l) {
+        int wi = w_p[l], ni = n_p[l];
+        for (int niA = 0, wiA = Aw_p[l]; niA < Alayers[l];
+             ++niA, ++ni, wi += Blayers[l - 1]) {
+            w_fl[wi] = Aw_fl[wiA];
+            if (w_fl[wi]) {
+                w_val[wi] = Aw_val[wiA];
+                ++w_on;
+            }
+            ++wi; ++wiA;
+            for (int npiA = 0, npi = n_p[l - 1]; npiA < Alayers[l - 1];
+                 ++npiA, ++npi, ++wiA, ++wi) {
+                w_fl[wi] = Aw_fl[wiA];
+                if (w_fl[wi]) {
+                    ++w_on;
+                    ++n_prev[ni];
+                    ++n_next[npi];
+                    w_val[wi] = Aw_val[wiA];
+                }
+            }
+        }
+        wi = w_p[l] + Alayers[l] * (layers[l - 1] + 1), ni = n_p[l] + Alayers[l];
+        for (int niB = 0, wiB = Bw_p[l]; niB < Blayers[l];
+             ++niB, ++ni) {
+            w_fl[wi] = Bw_fl[wiB];
+            if (w_fl[wi]) {
+                w_val[wi] = Bw_val[wiB];
+                ++w_on;
+            }
+            ++wiB;
+            wi += Alayers[l - 1] + 1;
+            for (int npiB = 0, npi = n_p[l - 1] + Alayers[l - 1];
+                 npiB < Blayers[l - 1]; ++npiB, ++npi, ++wiB, ++wi) {
+                w_fl[wi] = Bw_fl[wiB];
+                if (w_fl[wi]) {
+                    ++w_on;
+                    ++n_prev[ni];
+                    ++n_next[npi];
+                    w_val[wi] = Bw_val[wiB];
+                }
+            }
+        }
+    }
+}
+
+
+
+// Explicit instantiations
+#ifndef FCNN_DOUBLE_ONLY
+template
+void
+fcnn::internal::mlp_merge(const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<float>&, const std::vector<int>&,
+                          const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<float>&, const std::vector<int>&,
+                          bool,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<float>&,
+                          std::vector<int>&, int&);
+#endif /* FCNN_DOUBLE_ONLY */
+template
+void
+fcnn::internal::mlp_merge(const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<double>&, const std::vector<int>&,
+                          const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<double>&, const std::vector<int>&,
+                          bool,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<double>&,
+                          std::vector<int>&, int&);
+
+
+
+
+template <typename T>
+void
+fcnn::internal::mlp_stack(const std::vector<int> &Alayers, const std::vector<int> &Aw_p,
+                          const std::vector<T> &Aw_val, const std::vector<int> &Aw_fl,
+                          const std::vector<int> &Blayers, const std::vector<int> &Bw_p,
+                          const std::vector<T> &Bw_val, const std::vector<int> &Bw_fl,
+                          std::vector<int> &layers, std::vector<int> &n_p,
+                          std::vector<int> &n_prev, std::vector<int> &n_next,
+                          std::vector<int> &w_p, std::vector<T> &w_val,
+                          std::vector<int> &w_fl, int &w_on)
+{
+    // layers
+    if (Alayers.back() != Blayers.front())
+        throw exception("numbers of output and input neurons in merged networks disagree");
+    layers = Alayers;
+    layers.insert(layers.end(), Blayers.begin() + 1, Blayers.end());
+    int nol = layers.size();
+
+    // neurons
+    n_p.assign(nol + 1, 0);
+    for (int i = 0; i < nol; ++i) n_p[i + 1] = n_p[i] + layers[i];
+
+    // weights
+    w_p = Aw_p;
+    w_p.insert(w_p.end(), Bw_p.begin() + 2, Bw_p.end());
+    for (int i = Alayers.size() + 1; i <= nol; ++i) w_p[i] += Aw_p.back();
+    w_val = Aw_val;
+    w_val.insert(w_val.end(), Bw_val.begin(), Bw_val.end());
+    w_fl = Aw_fl;
+    w_fl.insert(w_fl.end(), Bw_fl.begin(), Bw_fl.end());
+
+    // update active connection count and neuron connection info
+    w_on = 0;
+    n_prev.assign(n_p[nol], 0);
+    n_next.assign(n_p[nol], 0);
+    for (int l = 1, wi = 0; l < nol; ++l) {
+        for (int n = n_p[l], nn = n_p[l + 1]; n < nn; ++n) {
+            if (w_fl[wi++]) ++w_on;
+            for (int np = n_p[l - 1], nnp = n_p[l]; np < nnp; ++np) {
+                if (w_fl[wi++]) {
+                    ++w_on;
+                    ++n_prev[n];
+                    ++n_next[np];
+                }
+            }
+        }
+    }
+}
+
+
+
+// Explicit instantiations
+#ifndef FCNN_DOUBLE_ONLY
+template
+void
+fcnn::internal::mlp_stack(const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<float>&, const std::vector<int>&,
+                          const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<float>&, const std::vector<int>&,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<float>&,
+                          std::vector<int>&, int&);
+#endif /* FCNN_DOUBLE_ONLY */
+template
+void
+fcnn::internal::mlp_stack(const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<double>&, const std::vector<int>&,
+                          const std::vector<int>&, const std::vector<int>&,
+                          const std::vector<double>&, const std::vector<int>&,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<int>&,
+                          std::vector<int>&, std::vector<double>&,
+                          std::vector<int>&, int&);
+
+
+
+
+
+
 template <typename T>
 bool
 fcnn::internal::mlp_save_txt(const std::string &fname,

@@ -4,9 +4,10 @@
 \alias{mlp_grad}
 \alias{mlp_gradi}
 \alias{mlp_gradij}
+\alias{mlp_jacob}
 \alias{mlp_mse}
 \alias{mlp_net-MSE-gradients}
-\title{Computing mean squared error, its gradient, and output gradients}
+\title{Computing mean squared error, its gradient, and output derivatives}
 \usage{
 mlp_mse(net, input, output)
 
@@ -15,6 +16,8 @@ mlp_grad(net, input, output)
 mlp_gradi(net, input, output, i)
 
 mlp_gradij(net, input, i)
+
+mlp_jacob(net, input, i)
 }
 \arguments{
 \item{net}{an object of \code{mlp_net} class}
@@ -41,6 +44,9 @@ field (\code{grad}) containing numeric vector with gradient and the second
 
 \code{mlp_gradij} returns numeric matrix with gradients of outputs in
 consecutive columns.
+
+\code{mlp_jacob} returns numeric matrix with derivatives of outputs in
+consecutive columns.
 }
 \description{
 The functions use fast FCNN kernel routines and are intended for implementing
@@ -65,5 +71,10 @@ matrix. Scaled by the output errors and averaged they give the same
 as \code{gradi(input, output, i)}. This function is useful in implementing
 teaching algorithms using second order corrections and Optimal Brain Surgeon
 pruning algorithm.
+
+\code{mlp_jacob} computes the Jacobian of network outputs, i.e the derivatives
+of outputs w.r.t. inputs, at given data row.
+The derivatives of outputs are placed in subsequent columns of the returned
+matrix.
 }
 

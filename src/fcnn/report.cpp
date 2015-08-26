@@ -26,9 +26,9 @@
 #include <fcnn/report.h>
 #ifdef R_DLL
 #include <R.h>
-#else
+#else /* R_DLL */
 #include <iostream>
-#endif
+#endif /* R_DLL */
 
 
 void

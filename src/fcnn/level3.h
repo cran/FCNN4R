@@ -19,7 +19,8 @@
  */
 
 /** \file level3.h
- *  \brief Level 3 operations: evaluation, MSE, and gradients.
+ *  \brief Level 3 operations: evaluation, MSE, and gradients plus
+ *  Hessian inverse update used in OBS.
  */
 
 #ifndef FCNN_LEVEL3_H
@@ -74,6 +75,21 @@ gradij(const int *lays, int no_lays, const int *n_pts,
        const int *w_pts, const int *w_fl, const T *w_val, int no_w_on,
        int hl_af, T hl_af_p, int ol_af, T ol_af_p,
        int no_datarows, int i, const T *in, T *gr);
+
+/// Compute the Jacobian of network transformation, i.e the derivatives
+/// of outputs w.r.t. network inputs, at given data row.
+template <typename T>
+void
+jacob(const int *lays, int no_lays, const int *n_pts,
+      const int *w_pts, const int *w_fl, const T *w_val, int no_w_on,
+      int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+      int no_datarows, int i, const T *in, T *jac);
+
+/// Update Hessian inverse approximation given result from gradij.
+/// Implemented only if BLAS library is present.
+template <typename T>
+void
+ihessupdate(int nw, int no, T a, const T *g, T *Hinv);
 
 
 

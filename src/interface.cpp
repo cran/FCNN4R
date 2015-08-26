@@ -45,18 +45,143 @@ mlp_construct(SEXP lays)
 
     try {
         fcnn::internal::mlp_construct(layers, n_p, n_prev, n_next,
-                                    w_p, w_val, w_fl, w_on);
+                                      w_p, w_val, w_fl, w_on);
     } catch (fcnn::exception &e) {
         Rf_error(e.what());
     }
 
-    return Rcpp::List::create(Rcpp::wrap(n_p),
-                              Rcpp::wrap(n_prev),
-                              Rcpp::wrap(n_next),
-                              Rcpp::wrap(w_p),
-                              Rcpp::wrap(w_val),
-                              Rcpp::wrap(w_fl),
-                              Rcpp::wrap(w_on));
+    SEXP wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
+         ret;
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(wrap_w_on = Rcpp::wrap(w_on));
+    PROTECT(ret = Rcpp::List::create(wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl,
+                                     wrap_w_on));
+    UNPROTECT(8);
+    return ret;
+}
+
+
+RcppExport
+SEXP
+mlp_merge(SEXP Alays, SEXP Awp, SEXP Awval, SEXP Awfl,
+          SEXP Blays, SEXP Bwp, SEXP Bwval, SEXP Bwfl,
+          SEXP sinp)
+{
+    std::vector<int> Alayers = Rcpp::as<std::vector<int> >(Alays);
+    std::vector<int> Aw_p = Rcpp::as<std::vector<int> >(Awp);
+    std::vector<double> Aw_val = Rcpp::as<std::vector<double> >(Awval);
+    std::vector<int> Aw_fl = Rcpp::as<std::vector<int> >(Awfl);
+    std::vector<int> Blayers = Rcpp::as<std::vector<int> >(Blays);
+    std::vector<int> Bw_p = Rcpp::as<std::vector<int> >(Bwp);
+    std::vector<double> Bw_val = Rcpp::as<std::vector<double> >(Bwval);
+    std::vector<int> Bw_fl = Rcpp::as<std::vector<int> >(Bwfl);
+    bool same_inputs = Rcpp::as<bool>(sinp);
+    std::vector<int> layers;
+    std::vector<int> n_p;
+    std::vector<int> n_prev;
+    std::vector<int> n_next;
+    std::vector<int> w_p;
+    std::vector<double> w_val;
+    std::vector<int> w_fl;
+    int w_on;
+
+    try {
+        fcnn::internal::mlp_merge(Alayers, Aw_p, Aw_val, Aw_fl,
+                                  Blayers, Bw_p, Bw_val, Bw_fl,
+                                  same_inputs,
+                                  layers, n_p, n_prev, n_next,
+                                  w_p, w_val, w_fl, w_on);
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
+
+    SEXP wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
+         ret;
+    PROTECT(wrap_layers = Rcpp::wrap(layers));
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(wrap_w_on = Rcpp::wrap(w_on));
+    PROTECT(ret = Rcpp::List::create(wrap_layers,
+                                     wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl,
+                                     wrap_w_on));
+    UNPROTECT(9);
+    return ret;
+}
+
+
+RcppExport
+SEXP
+mlp_stack(SEXP Alays, SEXP Awp, SEXP Awval, SEXP Awfl,
+          SEXP Blays, SEXP Bwp, SEXP Bwval, SEXP Bwfl)
+{
+    std::vector<int> Alayers = Rcpp::as<std::vector<int> >(Alays);
+    std::vector<int> Aw_p = Rcpp::as<std::vector<int> >(Awp);
+    std::vector<double> Aw_val = Rcpp::as<std::vector<double> >(Awval);
+    std::vector<int> Aw_fl = Rcpp::as<std::vector<int> >(Awfl);
+    std::vector<int> Blayers = Rcpp::as<std::vector<int> >(Blays);
+    std::vector<int> Bw_p = Rcpp::as<std::vector<int> >(Bwp);
+    std::vector<double> Bw_val = Rcpp::as<std::vector<double> >(Bwval);
+    std::vector<int> Bw_fl = Rcpp::as<std::vector<int> >(Bwfl);
+    std::vector<int> layers;
+    std::vector<int> n_p;
+    std::vector<int> n_prev;
+    std::vector<int> n_next;
+    std::vector<int> w_p;
+    std::vector<double> w_val;
+    std::vector<int> w_fl;
+    int w_on;
+
+    try {
+        fcnn::internal::mlp_stack(Alayers, Aw_p, Aw_val, Aw_fl,
+                                  Blayers, Bw_p, Bw_val, Bw_fl,
+                                  layers, n_p, n_prev, n_next,
+                                  w_p, w_val, w_fl, w_on);
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
+
+    SEXP wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
+         ret;
+    PROTECT(wrap_layers = Rcpp::wrap(layers));
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(wrap_w_on = Rcpp::wrap(w_on));
+    PROTECT(ret = Rcpp::List::create(wrap_layers,
+                                     wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl,
+                                     wrap_w_on));
+    UNPROTECT(9);
+    return ret;
 }
 
 
@@ -83,15 +208,30 @@ mlp_rm_neurons(SEXP lays, SEXP np, SEXP nprev, SEXP nnext,
                                              hl_af, hl_af_p,
                                              report);
 
-    return Rcpp::List::create(Rcpp::wrap(layers),
-                              Rcpp::wrap(n_p),
-                              Rcpp::wrap(n_prev),
-                              Rcpp::wrap(n_next),
-                              Rcpp::wrap(w_p),
-                              Rcpp::wrap(w_val),
-                              Rcpp::wrap(w_fl),
-                              Rcpp::wrap(w_on),
-                              Rcpp::wrap(nrm));
+    SEXP wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
+         wrap_nrm,
+         ret;
+    PROTECT(wrap_layers = Rcpp::wrap(layers));
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(wrap_w_on = Rcpp::wrap(w_on));
+    PROTECT(wrap_nrm = Rcpp::wrap(nrm));
+    PROTECT(ret = Rcpp::List::create(wrap_layers,
+                                     wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl,
+                                     wrap_w_on,
+                                     wrap_nrm));
+    UNPROTECT(10);
+    return ret;
 }
 
 
@@ -121,20 +261,38 @@ mlp_import(SEXP fname)
                                       hl_af, hl_af_p, ol_af, ol_af_p)) {
         return R_NilValue;
     }
-
-    return Rcpp::List::create(Rcpp::wrap(netname),
-                              Rcpp::wrap(layers),
-                              Rcpp::wrap(n_p),
-                              Rcpp::wrap(n_prev),
-                              Rcpp::wrap(n_next),
-                              Rcpp::wrap(w_p),
-                              Rcpp::wrap(w_val),
-                              Rcpp::wrap(w_fl),
-                              Rcpp::wrap(w_on),
-                              Rcpp::wrap(hl_af),
-                              Rcpp::wrap(hl_af_p),
-                              Rcpp::wrap(ol_af),
-                              Rcpp::wrap(ol_af_p));
+    SEXP wrap_netname, wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
+         wrap_hl_af, wrap_hl_af_p, wrap_ol_af, wrap_ol_af_p,
+         ret;
+    PROTECT(wrap_netname = Rcpp::wrap(netname));
+    PROTECT(wrap_layers = Rcpp::wrap(layers));
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(wrap_w_on = Rcpp::wrap(w_on));
+    PROTECT(wrap_hl_af = Rcpp::wrap(hl_af));
+    PROTECT(wrap_hl_af_p = Rcpp::wrap(hl_af_p));
+    PROTECT(wrap_ol_af = Rcpp::wrap(ol_af));
+    PROTECT(wrap_ol_af_p = Rcpp::wrap(ol_af_p));
+    PROTECT(ret = Rcpp::List::create(wrap_netname,
+                                     wrap_layers,
+                                     wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl,
+                                     wrap_w_on,
+                                     wrap_hl_af,
+                                     wrap_hl_af_p,
+                                     wrap_ol_af,
+                                     wrap_ol_af_p));
+    UNPROTECT(14);
+    return ret;
 }
 
 
@@ -308,6 +466,36 @@ mlp_gradij(const int *lays, const int *no_lays, const int *n_pts,
     } catch (fcnn::exception &e) {
         Rf_error(e.what());
     }
+}
+
+
+
+RcppExport
+void
+mlp_jacob(const int *lays, const int *no_lays, const int *n_pts,
+          const int *w_pts, const int *w_fl, const double *w_val, const int *no_w_on,
+          const int *hl_af, const double *hl_af_p,
+          const int *ol_af, const double *ol_af_p,
+          const int *no_datarows, const int *i, double *in,
+          double *jacob)
+{
+    try {
+        fcnn::internal::jacob(lays, *no_lays, n_pts,
+                              w_pts, w_fl, w_val, *no_w_on,
+                              *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                              *no_datarows, *i - 1, in, jacob);
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
+}
+
+
+
+RcppExport
+void
+ihessupdate(const int *nw, const int *no, double *a, const double *g, double *H)
+{
+    fcnn::internal::ihessupdate(*nw, *no, *a, g, H);
 }
 
 
