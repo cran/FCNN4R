@@ -31,6 +31,8 @@ namespace fcnn {
 namespace internal {
 
 
+
+
 template <typename T, int N>
 struct DOT_BLOCK {
     static inline T dot(const T* x, int incx, const T* y, int incy) {
@@ -317,6 +319,8 @@ struct SUMSQDIFF {
 };
 
 
+
+
 template <typename T, int N>
 struct SUMSQ_BLOCK {
     static inline T sumsq(const T* x, int incx) {
@@ -368,6 +372,7 @@ struct SUMSQ {
         } else return SUMSQ_SWITCH<T, N - 1>::sumsq(n, x, incx);
     }
 };
+
 
 
 

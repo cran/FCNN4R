@@ -1,4 +1,4 @@
-6bb31e2c53d079bbc3c26da2cce9c9eb *DESCRIPTION
+7273e5b3369e4761b3e1bc8631427e94 *DESCRIPTION
 57a5e372daac582cb9b468cd066b6096 *NAMESPACE
 a0d80ed5d3042c1968b5fc3c7b12e8e4 *R/mlp_net.R
 ee5a62e529f8cee3cf255ba07e8b1ebc *R/mlp_plot.R
@@ -30,14 +30,14 @@ a5cbf2a452936f0dafa6f2a9e12590d2 *man/mlp_rnd_weights.Rd
 7a8ae05f4133ddd2e0c335976e664ce1 *man/mlp_set_activation.Rd
 6baa4f2f74b731152d9db56acee64deb *man/mlp_teach_bp.Rd
 7a0d30359cc07f81f3423f4e461ebf58 *man/mlp_teach_rprop.Rd
-21f66e9f8ad9b1d33c27ab10f69ce51d *src/Makevars
-7af01ceb1678cf6b9b2181c7d9f2b9c2 *src/Makevars.win
+07e8491c31769b08795c2be2590eb482 *src/Makevars
+98db9ac356c16f6d173fb7c123dd4bfc *src/Makevars.win
 0b2dfe38eadf7861a5fb382c738a1a36 *src/fcnn/activation.h
 ad217e9fd301aa0bf53eba67eeb05935 *src/fcnn/error.h
 868da8d493d43c67dcb6686c392a8d45 *src/fcnn/export.cpp
 e020b6736dc5cff63f161741f939e888 *src/fcnn/export.h
 4ba3a8c0b7386b85a40069b7e28597e2 *src/fcnn/level1.h
-7389f53116c973604e6f99b87be2d940 *src/fcnn/level1_impl.h
+27a9cb8f5b9d8109a53a348267031420 *src/fcnn/level1_impl.h
 122ee9d7ec43709a9dc9d2781ab6e072 *src/fcnn/level2.cpp
 2609789942f869ef7723478afe1c5c4a *src/fcnn/level2.h
 f0a4c0103fa1936ed39c8cd2447102aa *src/fcnn/level3.cpp

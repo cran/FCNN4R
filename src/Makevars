@@ -1,4 +1,4 @@
-PKG_LIBS = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -lstdc++
+PKG_LIBS = `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 PREFIX =.
 INCLUDE_FCNN_R = -I$(PREFIX)
 OBJECTS_FCNN_R = $(PREFIX)/interface.o $(PREFIX)/fcnn/utils.o $(PREFIX)/fcnn/struct.o $(PREFIX)/fcnn/export.o $(PREFIX)/fcnn/report.o $(PREFIX)/fcnn/level2.o $(PREFIX)/fcnn/level3.o
