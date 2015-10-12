@@ -544,7 +544,19 @@ fcnn::internal::mlp_stack(const std::vector<int>&, const std::vector<int>&,
 
 
 
+namespace {
 
+template <typename TA, typename TB>
+struct types_eq {
+    static const bool val = false;
+};
+
+template <typename T>
+struct types_eq<T, T> {
+    static const bool val = true;
+};
+
+} /* namespace */
 
 
 template <typename T>
@@ -562,28 +574,41 @@ fcnn::internal::mlp_save_txt(const std::string &fname,
     if (netname[0]) write_comment(file, netname);
     else file << "#\n";
 
-    file << "\n# saved on " << time_str() << "\n\n";
+    file << "\n# FCNN network representation saved on " << time_str() << "\n\n";
 
-    file << "# layers\n";
+    file << "# layers (" << num2str((unsigned)layers.size()) << ")\n";
     for (int i = 0; i < (int)layers.size(); ++i) {
         if (i) file << ' ';
         file << layers[i];
     }
-    file << "\n# flags\n";
+    file << "\n\n# flags (" << num2str((unsigned)w_fl.size()) << ")\n";
+    int awcount = 0;
     for (int i = 0, n = w_fl.size(); i < n; ++i) {
-        if (i) file << ' ';
-        if (w_fl[i]) file << '1'; else file << '0';
+        if (i % 40) file << ' '; else if (i) file << '\n';
+        if (w_fl[i]) { file << '1'; ++awcount; } else file << '0';
     }
-    file << "\n# weights\n";
+    file << "\n\n# weights (" << num2str(awcount) << ")\n";
     file << std::setprecision(precision<T>::val);
+    int noinrow;
+    if (types_eq<T, float>::val) noinrow = 8;
+    if (types_eq<T, double>::val) noinrow = 4;
     for (int i = 0, k = 0, n = w_fl.size(); i < n; ++i) {
         if (w_fl[i]) {
-            if (k) file << ' ';
+            if (k % noinrow) file << ' '; else if (k) file << '\n';
             file << w_val[i];
             ++k;
         }
     }
-    file << "\n# activation functions\n";
+    file << "\n\n# activation functions\n";
+    file << "# hidden layer(s): " << mlp_act_f_str(hl_af);
+    if ((hl_af != 1) && (hl_af != 2)) {
+        file << " with s = " << num2str(hl_af_p);
+    }
+    file << "\n# output layer: " << mlp_act_f_str(ol_af);
+    if ((ol_af != 1) && (ol_af != 2)) {
+        file << " with s = " << num2str(hl_af_p);
+    }
+    file << '\n';
     file << (int) hl_af << ' ' << hl_af_p << '\n';
     file << (int) ol_af << ' ' << ol_af_p << "\n\n";
     if (file.good()) {
@@ -630,11 +655,10 @@ fcnn::internal::mlp_load_txt(const std::string &fname,
     if (!file) return false;
 
     skip_all(file);
-    while (file && !is_eol(file)) {
+    while (file && !is_deol(file)) {
         int fl;
         if (read(file, fl)) {
-            if (fl == 1) w_fl.push_back(1);
-            else if (fl == 0) w_fl.push_back(0);
+            if ((fl == 0) || (fl == 1)) w_fl.push_back(fl);
             else return false;
         }
         else return false;
@@ -643,7 +667,7 @@ fcnn::internal::mlp_load_txt(const std::string &fname,
 
     skip_all(file);
     std::vector<T> vals;
-    while (!file.fail() && !is_eoleof(file)) {
+    while (!file.fail() && !is_deol(file)) {
         T val;
         if (read(file, val)) vals.push_back(val);
         else return false;

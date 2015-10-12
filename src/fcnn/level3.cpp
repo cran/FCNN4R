@@ -473,10 +473,9 @@ fcnn::internal::ihessupdate(int nw, int no, T a, const T *g, T *H)
     std::vector<T> HXv(nw);
     T *HX = &HXv[0];
     const T *X = g;
-    char notr = 'N';
     T alpha, one = 1., zero = 0.;
     for (int j = 0; j < no; ++j, X += nw) {
-        gemv(notr, nw, nw, one, H, nw, X, 1, zero, HX, 1);
+        gemv('N', nw, nw, one, H, nw, X, 1, zero, HX, 1);
         alpha = (T)-1. / (a + dot(nw, X, 1, HX, 1));
         ger(nw, nw, alpha, HX, 1, HX, 1, H, nw);
     }

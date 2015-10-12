@@ -30,7 +30,7 @@ on the console (this is the default)}
        algorithm (default 0.7)}
 }
 \value{
-Two-element list, the first field (\code{net}) contains trained network,
+Two-element list, the first field (\code{net}) contains the trained network,
         the second (\code{mse}) - the learning history (MSE in consecutive epochs).
 }
 \description{

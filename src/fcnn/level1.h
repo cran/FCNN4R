@@ -39,24 +39,30 @@ namespace internal {
 // implementation is faster than those found in most of BLAS libs avaialable.
 #if 0 // defined(HAVE_BLAS)
 extern "C" {
-float F77_FUNC(sdot,SDOT)(const int *n,
-                          const float *dx, const int *incx,
-                          const float *dy, const int *incy);
-double F77_FUNC(ddot,DDOT)(const int *n,
-                           const double *dx, const int *incx,
-                           const double *dy, const int *incy);
-void F77_FUNC(scopy,SCOPY)(const int *n,
-                           const float *dx, const int *incx,
-                           float *dy, const int *incy);
-void F77_FUNC(dcopy,DCOPY)(const int *n,
-                           const double *dx, const int *incx,
-                           double *dy, const int *incy);
-void F77_FUNC(saxpy,SAXPY)(const int *n, const float *da,
-                           const float *dx, const int *incx,
-                           float *dy, const int *incy);
-void F77_FUNC(daxpy,DAXPY)(const int *n, const double *da,
-                           const double *dx, const int *incx,
-                           double *dy, const int *incy);
+float
+F77_FUNC(sdot,SDOT)(const int *n,
+                    const float *dx, const int *incx,
+                    const float *dy, const int *incy);
+double
+F77_FUNC(ddot,DDOT)(const int *n,
+                    const double *dx, const int *incx,
+                    const double *dy, const int *incy);
+void
+F77_FUNC(scopy,SCOPY)(const int *n,
+                      const float *dx, const int *incx,
+                      float *dy, const int *incy);
+void
+F77_FUNC(dcopy,DCOPY)(const int *n,
+                      const double *dx, const int *incx,
+                      double *dy, const int *incy);
+void
+F77_FUNC(saxpy,SAXPY)(const int *n, const float *da,
+                      const float *dx, const int *incx,
+                      float *dy, const int *incy);
+void
+F77_FUNC(daxpy,DAXPY)(const int *n, const double *da,
+                      const double *dx, const int *incx,
+                      double *dy, const int *incy);
 }
 #endif
 

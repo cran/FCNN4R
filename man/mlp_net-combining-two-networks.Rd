@@ -29,18 +29,18 @@ and input neurons must agree). These functions may be used in constructing
 deep learning networks or constructing networks with some special topologies.
 }
 \examples{
-# Create two 2-2-2 networks with random weights and plot them
+# create two 2-2-2 networks with random weights and plot them
 net1 <- mlp_net(c(2, 2, 2))
 net1 <- mlp_rnd_weights(net1)
 mlp_plot(net1, TRUE)
 net2 <- mlp_net(c(2, 2, 2))
 net2 <- mlp_rnd_weights(net2)
 mlp_plot(net2, TRUE)
-# Create a 4-3-2 network with random weights and plot it
+# create a 4-3-2 network with random weights and plot it
 net3 <- mlp_net(c(4, 3, 2))
 net3 <- mlp_rnd_weights(net3)
 mlp_plot(net3, TRUE)
-# Construct new network using net1, net2, and net3 and plot it
+# construct new network using net1, net2, and net3 and plot it
 net4 <- mlp_stack(mlp_merge(net1, net2), net3)
 mlp_plot(net4, TRUE)
 }

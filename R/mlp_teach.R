@@ -51,7 +51,7 @@
 #' @param learn_rate numeric value, learning rate in the backpropagation
 #'        algorithm (default 0.7)
 #'
-#' @return Two-element list, the first field (\code{net}) contains trained network,
+#' @return Two-element list, the first field (\code{net}) contains the trained network,
 #'         the second (\code{mse}) - the learning history (MSE in consecutive epochs).
 #'
 #' @references
@@ -110,7 +110,7 @@ mlp_teach_bp <- function(net, input, output,
 #' Rprop teaching
 #'
 #' Rprop is a fast and robust adaptive step method based on backpropagation.
-#' For details please refer to the original paper given in References section.
+#' For details, please refer to the original paper given in References section.
 #'
 #'
 #' @param net an object of \code{mlp_net} class
@@ -130,7 +130,7 @@ mlp_teach_bp <- function(net, input, output,
 #' @param gmax numeric value, Rprop algorithm parameter (default 50)
 #' @param gmin numeric value, Rprop algorithm parameter (default 1e-6)
 #'
-#' @return Two-element list, the first field (\code{net}) contains trained network,
+#' @return Two-element list, the first field (\code{net}) contains the trained network,
 #'         the second (\code{mse}) - the learning history (MSE in consecutive epochs).
 #'
 #' @references

@@ -28,15 +28,15 @@ with optional affine input and output transformations: Ax+b for inputs
 and Cx+d for outputs.
 }
 \examples{
-# Create a 2-3-1 network
+# create a 2-3-1 network
 net <- mlp_net(c(2, 3, 1))
-# Randomise weights
+# randomise weights
 net <- mlp_rnd_weights(net)
-# Show the network
+# show the network
 show(net)
-# Export network
+# export network to a C function
 mlp_export_C(net, "test.c")
-# Show the output file
+# show the output file
 file.show("test.c")
 }
 

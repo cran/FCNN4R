@@ -121,6 +121,10 @@ void skip_all(std::istream &is);
 /// Are we at the end of line (whitespace ignored)?
 bool is_eol(std::istream &is);
 
+/// Are we at the end of line (whitespace ignored) followed by another eol
+/// or a line beginning with comment?
+bool is_deol(std::istream &is);
+
 /// Are we at the end of line or file (whitespace ignored)?
 bool is_eoleof(std::istream &is);
 

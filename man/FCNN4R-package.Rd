@@ -4,39 +4,51 @@
 \alias{FCNN4R-package}
 \title{Fast Compressed Neural Networks for R}
 \description{
-The FCNN4R package provides an interface to kernel
-routines from the FCNN C++ library. FCNN is based on a completely new
-Artificial Neural Network representation that offers unmatched efficiency,
-modularity, and extensibility. FCNN4R provides standard teaching
-(backpropagation, Rprop) and pruning algorithms (minimum magnitude, Optimal
-Brain Surgeon), but it is first and foremost an efficient computational
-engine. Users can easily implement their algorithms by taking advantage
-of fast gradient computing routines, as well as network reconstruction
-functionality (removing weights and redundant neurons).
+The FCNN4R package provides an interface to kernel routines
+from the FCNN C++ library. FCNN is based on a completely new
+Artificial Neural Network representation that offers unmatched
+efficiency, modularity, and extensibility. FCNN4R provides
+standard teaching (backpropagation, Rprop, simulated annealing)
+and pruning algorithms (minimum magnitude, Optimal Brain Surgeon),
+but it is first and foremost an efficient computational engine.
+Users can easily implement their algorithms by taking advantage
+of fast gradient computing routines, as well as network
+reconstruction functionality (removing weights and redundant
+neurons).
 }
 \examples{
-# Create a 2-6-1 network
+# create a 2-6-1 network
 net <- mlp_net(c(2, 6, 1))
-# Randomise weights
-net <- mlp_rnd_weights(net)
-# Set up the XOR problem inputs and outputs
+# set up the XOR problem inputs and outputs
 inp <- c(0, 0, 1, 1, 0, 1, 0, 1)
 dim(inp) <- c(4, 2)
 outp <- c(0, 1, 1, 0)
 dim(outp) <- c(4, 1)
-# Teach using Rprop, assign trained network and plot learning history
-netmse <- mlp_teach_rprop(net, inp, outp, tol_level = 0.5e-4,
+# randomise weights
+net <- mlp_rnd_weights(net)
+# tolerance level
+tol <- 0.5e-4
+# teach using Rprop, assign trained network and plot learning history
+netmse <- mlp_teach_rprop(net, inp, outp, tol_level = tol,
                           max_epochs = 500, report_freq = 10)
 net <- netmse$net
+# if the algorithm did not converge, teach again with new random initial weights
+while (mlp_mse(net, inp, outp) > tol) {
+    net <- mlp_rnd_weights(net)
+    netmse <- mlp_teach_rprop(net, inp, outp, tol_level = tol,
+                            max_epochs = 500, report_freq = 10)
+    net <- netmse$net
+}
+# plot learning history
 plot(netmse$mse, type = 'l')
-# Plot network with weights
+# plot network with weights
 mlp_plot(net, TRUE)
-# Prune using Optimal Brain Surgeon
+# prune using Optimal Brain Surgeon
 net <- mlp_prune_obs(net, inp, outp, tol_level = 0.5e-4,
                      max_reteach_epochs = 500, report = TRUE)[[1]]
-# Plot network with weights
+# plot network with weights
 mlp_plot(net, TRUE)
-# Check network output
+# check network output
 round(mlp_eval(net, inp), digits = 3)
 }
 \author{

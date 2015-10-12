@@ -40,7 +40,8 @@ mlp_plot <- function(net, show_weights = FALSE)
 
     lays <- mlp_get_layers(net)
     L <- length(lays)
-    xl <- L
+    dx <- max(max(lays) / L, 1)
+    xl <- L * dx
     yl <- max(lays)
     layspts <- list()
     for (l in 1:L) {
@@ -59,10 +60,20 @@ mlp_plot <- function(net, show_weights = FALSE)
 
     ly <- layspts[[1]]
     for (n in 1:lays[1]) {
-        segments(x0 = 0.35, y0 = ly[n], x1 = 0.5, col = colio, lwd = 2)
-        segments(x0 = 0.1, y0 = ly[n] - .05, x1 = 0.35, y1 = ly[n], col = colio, lwd = 2)
-        segments(x0 = 0.1, y0 = ly[n] + .05, x1 = 0.35, y1 = ly[n], col = colio, lwd = 2)
-        segments(x0 = 0.1, y0 = ly[n] + .05, y1 = ly[n] - .05, col = colio, lwd = 2)
+        x0 <- 0.5 * dx
+        segments(x0 = x0 - .65, y0 = ly[n], x1 = x0 - .5, col = colio, lwd = 2)
+        segments(x0 = x0 - .2, y0 = ly[n], x1 = x0, col = colio, lwd = 2)
+        segments(x0 = x0 - .5, y0 = ly[n] - .05, x1 = x0 - .2, y1 = ly[n], col = colio, lwd = 2)
+        segments(x0 = x0 - .5, y0 = ly[n] + .05, x1 = x0 - .2, y1 = ly[n], col = colio, lwd = 2)
+        segments(x0 = x0 - .5, y0 = ly[n] + .05, y1 = ly[n] - .05, col = colio, lwd = 2)
+    }
+    ly <- layspts[[L]]
+    for (n in 1:lays[L]) {
+        x0 <- (l - .5) * dx
+        segments(x0 = x0, y0 = ly[n], x1 = x0 + .3, col = colio, lwd = 2)
+        segments(x0 = x0 + .3, y0 = ly[n] - .05, x1 = x0 + .6, y1 = ly[n], col = colio, lwd = 2)
+        segments(x0 = x0 + .3, y0 = ly[n] + .05, x1 = x0 + .6, y1 = ly[n], col = colio, lwd = 2)
+        segments(x0 = x0 + .3, y0 = ly[n] + .05, y1 = ly[n] - .05, col = colio, lwd = 2)
     }
     for (l in 2:L) {
         ly <- layspts[[l]]
@@ -70,37 +81,31 @@ mlp_plot <- function(net, show_weights = FALSE)
         for (n in 1:lays[l]) {
             for (npl in 1:lays[l - 1]) {
                 if (mlp_get_w_st(net, layer = l, nidx = n, nplidx = npl)) {
-                    x0 <- l - 1.5
+                    x0 <- (l - 1.5) * dx
                     y0 <- lyp[npl]
+                    x1 <- (l - .5) * dx
                     y1 <- ly[n]
-                    x1 <- l - .5
                     segments(x0 = x0, y0 = y0, x1 = x1, y1 = y1, col = colw)
                     if (show_weights) {
                         wv <- mlp_get_w(net, layer = l, nidx = n, nplidx = npl)
                         t <- .3
                         text(x = t * x0 + (1 - t) * x1, y = t * y0 + (1 - t) * y1,
                              labels = signif(wv, digits = 5), pos = 3, cex = .66,
-                             srt = atan((y1 - y0)  * asp) / pi * 180, col = colw)
+                             srt = atan((y1 - y0) / dx * asp) / pi * 180, col = colw)
                     }
                 }
             }
             if (mlp_get_w_st(net, layer = l, nidx = n, nplidx = 0)) {
-                segments(x0 = l - .5, y0 = ly[n], x1 = l - .5, y1 = ly[n] - .5, col = colw)
+                x0 <- (l - .5) * dx
+                segments(x0 = x0, y0 = ly[n], y1 = ly[n] - .5, col = colw)
                     if (show_weights) {
                         wv <- mlp_get_w(net, layer = l, nidx = n, nplidx = 0)
-                        text(x = l - .5, y = ly[n] - .1,
+                        text(x = x0, y = ly[n] - .1,
                              labels = signif(wv, digits = 5),
                              pos = 2, cex = .66, srt = 90, col = colw)
                 }
             }
         }
-    }
-    ly <- layspts[[L]]
-    for (n in 1:lays[L]) {
-        segments(x0 = l - .5, y0 = ly[n], x1 = l - .35, col = colio, lwd = 2)
-        segments(x0 = l - .35, y0 = ly[n] - .05, x1 = l - .1, y1 = ly[n], col = colio, lwd = 2)
-        segments(x0 = l - .35, y0 = ly[n] + .05, x1 = l - .1, y1 = ly[n], col = colio, lwd = 2)
-        segments(x0 = l - .35, y0 = ly[n] + .05, y1 = ly[n] - .05, col = colio, lwd = 2)
     }
     for (l in 1:L) {
         ly <- layspts[[l]]
@@ -109,7 +114,7 @@ mlp_plot <- function(net, show_weights = FALSE)
         } else {
             cl <- colh
         }
-        points(x = rep(l - 0.5, length(ly)), y = ly, col = cl, pch = 16, cex = 3 / max(lays) ^ .3)
+        points(x = rep((l - 0.5) * dx, length(ly)), y = ly, col = cl, pch = 16, cex = 3 / max(lays) ^ .3)
     }
 }
 

@@ -35,12 +35,12 @@ on the console (this is the default)}
 \item{gmin}{numeric value, Rprop algorithm parameter (default 1e-6)}
 }
 \value{
-Two-element list, the first field (\code{net}) contains trained network,
+Two-element list, the first field (\code{net}) contains the trained network,
         the second (\code{mse}) - the learning history (MSE in consecutive epochs).
 }
 \description{
 Rprop is a fast and robust adaptive step method based on backpropagation.
-For details please refer to the original paper given in References section.
+For details, please refer to the original paper given in References section.
 }
 \references{
 M. Riedmiller. \emph{Rprop - Description and Implementation Details: Technical Report.} Inst. f.

@@ -297,6 +297,18 @@ fcnn::internal::is_eol(istream &is)
 
 
 bool
+fcnn::internal::is_deol(istream &is)
+{
+    if (!is_eol(is)) return false;
+    char c;
+    c = is.peek();
+    if (c == '#') return true;
+    return is_eol(is);
+}
+
+
+
+bool
 fcnn::internal::is_eoleof(istream &is)
 {
     char c;

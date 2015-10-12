@@ -65,8 +65,8 @@ std::string mlp_act_f_C_code(int af, T s, const std::string &t,
             return tab + y + " = (" + t + ")1 / ((" + t + ")1 + exp((" + t + ")"
                    + num2str(-2 * s) + " * " + x + "));\n";
         case sym_sigmoid:
-            return tab + y + "(" + t + ")2. / ((" + t + ")1. + exp((" + t + ")"
-                   + num2str(-2. * s) + " * x)) - (" + t + ")1.";
+            return tab + y + " = (" + t + ")2. / ((" + t + ")1. + exp((" + t + ")"
+                   + num2str(-2. * s) + " * x)) - (" + t + ")1.;\n";
         case sigmoid_approx:
             return tab + x + " = (" + t + ")" + num2str(s) + " * " + x + ";\n"
                    + tab + "if (" + x + " < (" + t + ")-2.8) " + y
@@ -154,7 +154,7 @@ fcnn::internal::mlp_export_C(const std::string &fname,
     file << "void\n" << name << "(const " << tname << " *input, "
          << tname << " *output)\n{\n";
 
-    int nol = layers.size(), non = n_p[nol], now = w_val.size();
+    int nol = layers.size(), non = n_p[nol - 1], now = w_val.size();
     std::string tab;
     if (types_eq<T, float>::val) tab = "                 ";
     if (types_eq<T, double>::val) tab = "                  ";

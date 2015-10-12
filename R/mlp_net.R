@@ -27,15 +27,17 @@
 
 #' Fast Compressed Neural Networks for R
 #'
-#' The FCNN4R package provides an interface to kernel
-#' routines from the FCNN C++ library. FCNN is based on a completely new
-#' Artificial Neural Network representation that offers unmatched efficiency,
-#' modularity, and extensibility. FCNN4R provides standard teaching
-#' (backpropagation, Rprop) and pruning algorithms (minimum magnitude, Optimal
-#' Brain Surgeon), but it is first and foremost an efficient computational
-#' engine. Users can easily implement their algorithms by taking advantage
-#' of fast gradient computing routines, as well as network reconstruction
-#' functionality (removing weights and redundant neurons).
+#' The FCNN4R package provides an interface to kernel routines
+#' from the FCNN C++ library. FCNN is based on a completely new
+#' Artificial Neural Network representation that offers unmatched
+#' efficiency, modularity, and extensibility. FCNN4R provides
+#' standard teaching (backpropagation, Rprop, simulated annealing)
+#' and pruning algorithms (minimum magnitude, Optimal Brain Surgeon),
+#' but it is first and foremost an efficient computational engine.
+#' Users can easily implement their algorithms by taking advantage
+#' of fast gradient computing routines, as well as network
+#' reconstruction functionality (removing weights and redundant
+#' neurons).
 #'
 #' @name FCNN4R-package
 #'
@@ -49,35 +51,45 @@
 #'
 #' @examples
 #'
-#' # Create a 2-6-1 network
+#' # create a 2-6-1 network
 #' net <- mlp_net(c(2, 6, 1))
-#' # Randomise weights
-#' net <- mlp_rnd_weights(net)
-#' # Set up the XOR problem inputs and outputs
+#' # set up the XOR problem inputs and outputs
 #' inp <- c(0, 0, 1, 1, 0, 1, 0, 1)
 #' dim(inp) <- c(4, 2)
 #' outp <- c(0, 1, 1, 0)
 #' dim(outp) <- c(4, 1)
-#' # Teach using Rprop, assign trained network and plot learning history
-#' netmse <- mlp_teach_rprop(net, inp, outp, tol_level = 0.5e-4,
+#' # randomise weights
+#' net <- mlp_rnd_weights(net)
+#' # tolerance level
+#' tol <- 0.5e-4
+#' # teach using Rprop, assign trained network and plot learning history
+#' netmse <- mlp_teach_rprop(net, inp, outp, tol_level = tol,
 #'                           max_epochs = 500, report_freq = 10)
 #' net <- netmse$net
+#' # if the algorithm did not converge, teach again with new random initial weights
+#' while (mlp_mse(net, inp, outp) > tol) {
+#'     net <- mlp_rnd_weights(net)
+#'     netmse <- mlp_teach_rprop(net, inp, outp, tol_level = tol,
+#'                             max_epochs = 500, report_freq = 10)
+#'     net <- netmse$net
+#' }
+#' # plot learning history
 #' plot(netmse$mse, type = 'l')
-#' # Plot network with weights
+#' # plot network with weights
 #' mlp_plot(net, TRUE)
-#' # Prune using Optimal Brain Surgeon
+#' # prune using Optimal Brain Surgeon
 #' net <- mlp_prune_obs(net, inp, outp, tol_level = 0.5e-4,
 #'                      max_reteach_epochs = 500, report = TRUE)[[1]]
-#' # Plot network with weights
+#' # plot network with weights
 #' mlp_plot(net, TRUE)
-#' # Check network output
+#' # check network output
 #' round(mlp_eval(net, inp), digits = 3)
 #'
 #' @useDynLib FCNN4R
 #'
 #' @import methods
 #' @import Rcpp
-#' @importFrom stats runif
+#' @importFrom stats runif rnorm
 #' @importFrom graphics plot.new plot.window segments text points
 #'
 NULL
@@ -150,11 +162,11 @@ setClass(Class = "mlp_net",
 #'
 #' @examples
 #'
-#' # Create a 2-3-1 network
+#' # create a 2-3-1 network
 #' net <- mlp_net(c(2, 3, 1))
-#' # Randomise weights
+#' # randomise weights
 #' net <- mlp_rnd_weights(net)
-#' # Show basic information about the network
+#' # show basic information about the network
 #' show(net)
 #'
 #' @keywords classes
@@ -233,10 +245,21 @@ function(object)
     cat(paste0("  output layer: ",
         mlp_actvfunc2str(object@m_af_ol, object@m_af_ol_slope), "\n"))
     cat("Weights:\n")
-    wg <- as.character(object@m_w_values)
-    wg[which(object@m_w_flags == 0L)] <- "off"
+    now <- length(object@m_w_flags)
+    truncthresh <- 19
+    if (now > truncthresh) {
+        trunc <- TRUE
+        wg <- as.character(object@m_w_values[1:truncthresh])
+        wg[which(object@m_w_flags[1:truncthresh] == 0L)] <- "off"
+        wg <- c(wg, "...[truncated]")
+    } else {
+        trunc <- FALSE
+        wg <- as.character(object@m_w_values)
+        wg[which(object@m_w_flags == 0L)] <- "off"
+    }
     cat(wg)
 })
+
 
 
 
@@ -489,18 +512,18 @@ mlp_rm_neurons <- function(net, report = FALSE)
 #'
 #' @examples
 #'
-#' # Create two 2-2-2 networks with random weights and plot them
+#' # create two 2-2-2 networks with random weights and plot them
 #' net1 <- mlp_net(c(2, 2, 2))
 #' net1 <- mlp_rnd_weights(net1)
 #' mlp_plot(net1, TRUE)
 #' net2 <- mlp_net(c(2, 2, 2))
 #' net2 <- mlp_rnd_weights(net2)
 #' mlp_plot(net2, TRUE)
-#' # Create a 4-3-2 network with random weights and plot it
+#' # create a 4-3-2 network with random weights and plot it
 #' net3 <- mlp_net(c(4, 3, 2))
 #' net3 <- mlp_rnd_weights(net3)
 #' mlp_plot(net3, TRUE)
-#' # Construct new network using net1, net2, and net3 and plot it
+#' # construct new network using net1, net2, and net3 and plot it
 #' net4 <- mlp_stack(mlp_merge(net1, net2), net3)
 #' mlp_plot(net4, TRUE)
 #'
@@ -632,17 +655,17 @@ mlp_stack <- function(net1, net2)
 #'
 #' @examples
 #'
-#' # Create a 2-3-1 network
+#' # create a 2-3-1 network
 #' net <- mlp_net(c(2, 3, 1))
-#' # Randomise weights
+#' # randomise weights
 #' net <- mlp_rnd_weights(net)
 #' # Show the network
 #' show(net)
-#' # Export network
+#' # export network
 #' mlp_export_fcnn(net, "test.net")
 #' # Show the output file
 #' file.show("test.net")
-#' # Import network
+#' # import network
 #' net2 <- mlp_import_fcnn("test.net")
 #' # Show the imported network
 #' show(net2)
@@ -717,15 +740,15 @@ mlp_import_fcnn <- function(fname)
 #'
 #' @examples
 #'
-#' # Create a 2-3-1 network
+#' # create a 2-3-1 network
 #' net <- mlp_net(c(2, 3, 1))
-#' # Randomise weights
+#' # randomise weights
 #' net <- mlp_rnd_weights(net)
-#' # Show the network
+#' # show the network
 #' show(net)
-#' # Export network
+#' # export network to a C function
 #' mlp_export_C(net, "test.c")
-#' # Show the output file
+#' # show the output file
 #' file.show("test.c")
 #'
 #' @export mlp_export_C

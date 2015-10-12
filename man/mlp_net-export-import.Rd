@@ -41,17 +41,17 @@ Files are organised as follows:
  }
 }
 \examples{
-# Create a 2-3-1 network
+# create a 2-3-1 network
 net <- mlp_net(c(2, 3, 1))
-# Randomise weights
+# randomise weights
 net <- mlp_rnd_weights(net)
 # Show the network
 show(net)
-# Export network
+# export network
 mlp_export_fcnn(net, "test.net")
 # Show the output file
 file.show("test.net")
-# Import network
+# import network
 net2 <- mlp_import_fcnn("test.net")
 # Show the imported network
 show(net2)

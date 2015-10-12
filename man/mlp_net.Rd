@@ -18,11 +18,11 @@ Returns an object of \code{mlp_net} class.
 Function used for creating multilayer perceptron networks.
 }
 \examples{
-# Create a 2-3-1 network
+# create a 2-3-1 network
 net <- mlp_net(c(2, 3, 1))
-# Randomise weights
+# randomise weights
 net <- mlp_rnd_weights(net)
-# Show basic information about the network
+# show basic information about the network
 show(net)
 }
 \seealso{
