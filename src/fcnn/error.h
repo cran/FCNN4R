@@ -50,6 +50,7 @@ class exception : public std::exception {
     virtual const char* what() const throw() { return m_mes.c_str(); }
 
   private:
+    /// Error message.
     std::string m_mes;
 
 }; /* class exception */
@@ -65,7 +66,7 @@ error(const std::string &s)
     std::cerr << "FCNN error: " << s << "\naborting...\n";
     abort();
 #else
-    throw fcnn::exception("FCNN error: " + s);
+    throw fcnn::exception(s);
 #endif
 }
 

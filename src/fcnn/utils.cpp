@@ -23,7 +23,10 @@
  */
 
 #include <fcnn/utils.h>
+#include <fcnn/version.h>
+#include <set>
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 
 
@@ -143,6 +146,13 @@ fcnn::internal::time_str()
     ts = num2str(now->tm_year + 1900) + '-' + mo + '-' + da + ' '
          + ho + ':' + mi + ':' + se;
     return ts;
+}
+
+
+string
+fcnn::internal::fcnn_ver()
+{
+    return string(FCNN_VERSION);
 }
 
 
@@ -329,12 +339,26 @@ fcnn::internal::is_eoleof(istream &is)
 
 
 
+// Not needed under R...
+#ifndef R_DLL
 
+std::vector<int>
+fcnn::internal::sample_int(int N, int M)
+{
+    std::vector<int> res;
+    std::set<int> help;
 
+    if ((N < M) || (M < 1)) return res;
 
+    int i;
+    res.reserve(M);
+    while (help.size() < M) {
+        i = (int)((double) ::rand() / ((double) RAND_MAX + 1.) * (double) N) + 1;
+        if (help.insert(i).second) res.push_back(i);
+    }
+    return res;
+}
 
-
-
-
+#endif /* R_DLL */
 
 

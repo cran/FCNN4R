@@ -29,6 +29,7 @@
 
 
 #include <vector>
+#include <map>
 #include <string>
 
 
@@ -62,6 +63,20 @@ void mlp_construct(const std::vector<int> &layers,
                    int &w_on);
 
 
+/// Reconstruct network by adding and/or reordeing input neurons. All new
+/// connections are inactive. Requires the new total no. of input neurons
+/// and a map of old inputs to new ones (1-based indexing).
+template <typename T>
+void mlp_expand_reorder_inputs(std::vector<int> &layers,
+                               std::vector<int> &n_p,
+                               std::vector<int> &n_prev,
+                               std::vector<int> &n_next,
+                               std::vector<int> &w_p,
+                               std::vector<T> &w_val,
+                               std::vector<int> &w_fl,
+                               int newnoinp, const std::map<int, int> &m);
+
+
 /// Reconstruct network by removing redundant neurons.
 template <typename T>
 int mlp_rm_neurons(std::vector<int> &layers,
@@ -72,11 +87,24 @@ int mlp_rm_neurons(std::vector<int> &layers,
                    std::vector<T> &w_val,
                    std::vector<int> &w_fl,
                    int &w_on,
-                   int hl_af, T hl_af_p,
+                   std::vector<int> & af,
+                   std::vector<T> &af_p,
                    bool report);
 
 
-/// Merge two networks (they must have the same number of layers)
+/// Reconstruct network by removing redundant input neurons.
+template <typename T>
+void mlp_rm_input_neurons(std::vector<int> &layers,
+                          std::vector<int> &n_p,
+                          std::vector<int> &n_prev,
+                          std::vector<int> &n_next,
+                          std::vector<int> &w_p,
+                          std::vector<T> &w_val,
+                          std::vector<int> &w_fl,
+                          bool report);
+
+
+/// Merge two networks (they must have the same number of layers).
 template <typename T>
 void mlp_merge(const std::vector<int> &Alayers, const std::vector<int> &Aw_p,
                const std::vector<T> &Aw_val, const std::vector<int> &Aw_fl,
@@ -90,7 +118,7 @@ void mlp_merge(const std::vector<int> &Alayers, const std::vector<int> &Aw_p,
 
 
 /// Connect one network outputs to another network inputs (the numbers of output
-/// and input neurons must agree)
+/// and input neurons must agree).
 template <typename T>
 void mlp_stack(const std::vector<int> &Alayers, const std::vector<int> &Aw_p,
                const std::vector<T> &Aw_val, const std::vector<int> &Aw_fl,
@@ -104,18 +132,18 @@ void mlp_stack(const std::vector<int> &Alayers, const std::vector<int> &Aw_p,
 
 
 
-/// Save network in a text file
+/// Save network in a text file.
 template <typename T>
 bool mlp_save_txt(const std::string &fname,
                   const std::string &netname,
                   const std::vector<int> &layers,
                   const std::vector<T> &w_val,
                   const std::vector<int> &w_fl,
-                  int hl_af, T hl_af_p,
-                  int ol_af, T ol_af_p);
+                  const std::vector<int> &af,
+                  const std::vector<T> &af_p);
 
 
-/// Load network in a text file
+/// Load network in a text file.
 template <typename T>
 bool mlp_load_txt(const std::string &fname,
                   std::string &netname,
@@ -127,8 +155,8 @@ bool mlp_load_txt(const std::string &fname,
                   std::vector<T> &w_val,
                   std::vector<int> &w_fl,
                   int &w_on,
-                  int &hl_af, T &hl_af_p,
-                  int &ol_af, T &ol_af_p);
+                  std::vector<int> &af,
+                  std::vector<T> &af_p);
 
 
 /// Get absolute neuron index given layer and neuron index within this layer.

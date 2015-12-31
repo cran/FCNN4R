@@ -26,12 +26,12 @@
 #' algorithm requires reteaching network in almost every step and yields suboptimal results.
 #'
 #' @param net an object of \code{mlp_net} class
-#' @param input numeric matrix, each row corresponds to one input vector
-#'        number of columns must be equal to the number of neurons
+#' @param input numeric matrix, each row corresponds to one input vector,
+#'        the number of columns must be equal to the number of neurons
 #'        in the network input layer
 #' @param output numeric matrix with rows corresponding to expected outputs,
-#'        number of columns must be equal to the number of neurons
-#'        in the network output layer, number of rows must be equal to the number
+#'        the number of columns must be equal to the number of neurons
+#'        in the network output layer, the number of rows must be equal to the number
 #'        of input rows
 #' @param tol_level numeric value, error (MSE) tolerance level
 #' @param max_reteach_epochs integer value, maximal number of epochs (iterations) allowed
@@ -129,12 +129,12 @@ mlp_prune_mag <- function(net, input, output,
 #' based on information about the inverse of (approximate) Hessian matrix of the MSE.
 #'
 #' @param net an object of \code{mlp_net} class
-#' @param input numeric matrix, each row corresponds to one input vector
-#'        number of columns must be equal to the number of neurons
+#' @param input numeric matrix, each row corresponds to one input vector,
+#'        the number of columns must be equal to the number of neurons
 #'        in the network input layer
 #' @param output numeric matrix with rows corresponding to expected outputs,
-#'        number of columns must be equal to the number of neurons
-#'        in the network output layer, number of rows must be equal to the number
+#'        the number of columns must be equal to the number of neurons
+#'        in the network output layer, the number of rows must be equal to the number
 #'        of input rows
 #' @param tol_level numeric value, error (MSE) tolerance level
 #' @param max_reteach_epochs integer value, maximal number of epochs (iterations) allowed

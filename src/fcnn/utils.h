@@ -28,6 +28,7 @@
 #define FCNN_UTILS_H
 
 #include <string>
+#include <vector>
 #include <iostream>
 
 
@@ -80,6 +81,9 @@ std::string num2str(double n);
 /// Return std::string with current date and time.
 std::string time_str();
 
+/// Return std::string with FCNN version.
+std::string fcnn_ver();
+
 
 /// Floating point precision.
 template <typename T>
@@ -127,6 +131,9 @@ bool is_deol(std::istream &is);
 
 /// Are we at the end of line or file (whitespace ignored)?
 bool is_eoleof(std::istream &is);
+
+/// Draw a random sample of size M of integers from 1 to N.
+std::vector<int> sample_int(int N, int M);
 
 
 } /* namespace internal */

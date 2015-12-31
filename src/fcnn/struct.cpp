@@ -28,6 +28,7 @@
 #include <fcnn/error.h>
 #include <fcnn/utils.h>
 #include <fcnn/report.h>
+#include <set>
 #include <fstream>
 #include <iomanip>
 #include <cctype>
@@ -188,6 +189,111 @@ template void fcnn::internal::mlp_construct(const std::vector<int>&,
 
 
 
+
+template <typename T>
+void
+fcnn::internal::mlp_expand_reorder_inputs(std::vector<int> &layers,
+                                          std::vector<int> &n_p,
+                                          std::vector<int> &n_prev,
+                                          std::vector<int> &n_next,
+                                          std::vector<int> &w_p,
+                                          std::vector<T> &w_val,
+                                          std::vector<int> &w_fl,
+                                          int newnoinp,
+                                          const std::map<int, int> &m)
+{
+    // Check new no of inputs
+    int ninp = newnoinp - layers[0];
+    if (ninp < 0)
+        throw exception("number of inputs in the new network must not be \
+smaller than the number of inputs in the initial network");
+    // Fill missing values in mapping
+    std::map<int, int> mcpy(m);
+    if (mcpy.size() < layers[0]) {
+        for (int i = 1; i <= layers[0]; ++i) {
+            if (mcpy.find(i) == mcpy.end())
+                mcpy[i] = i;
+        }
+    }
+    // Check mapping / construct inverse mapping
+    std::map<int, int>::const_iterator it;
+    std::set<int> mv;
+    for (it = mcpy.begin(); it != mcpy.end(); ++it) {
+        int frst = it->first;
+        int scnd = it->second;
+        if ((scnd < 1) || (scnd > newnoinp) || (frst < 1) || (frst > layers[0]))
+            throw exception("invalid mapping of inputs (index out of range)");
+        if (!mv.insert(scnd).second)
+            throw exception("invalid mapping of inputs (duplicated or ambiguous indices)");
+    }
+    // Expand inputs (place old ones at the beginning)
+    if (ninp) {
+        int nol = layers.size(), l0p1 = layers[0] + 1;
+        // Layers, neurons
+        layers[0] += ninp;
+        n_prev.insert(n_prev.begin() + n_p[1], ninp, 0);
+        n_next.insert(n_next.begin() + n_p[1], ninp, 0);
+        for (int ll = 1; ll <= nol; ++ll) n_p[ll] += ninp;
+        // Weights
+        for (int n = 0, wp = w_p[2]; n < layers[1]; ++n, wp -= l0p1) {
+            w_val.insert(w_val.begin() + wp, ninp, T());
+            w_fl.insert(w_fl.begin() + wp, ninp, 0);
+        }
+        for (int ll = 2; ll <= nol; ++ll) w_p[ll] += layers[1] * ninp;
+    }
+    // Temporary vectors
+    std::vector<int> nnext(n_p[1]);
+    std::vector<T> nval(w_p[2]);
+    std::vector<int> nfl(w_p[2]);
+    int l0p1 = layers[0] + 1;
+    for (int n = 0, w = 0; n < layers[1]; ++n, w += l0p1) {
+        nval[w] = w_val[w];
+        nfl[w] = w_fl[w];
+    }
+    // Reorder connections
+    for (it = mcpy.begin(); it != mcpy.end(); ++it) {
+        int id1 = it->first, id2 = it->second;
+        nnext[id2 - 1] = n_next[id1 - 1];
+        for (int n = 0, w1 = id1, w2 = id2; n < layers[1];
+                ++n, w1 += l0p1, w2 += l0p1) {
+            nval[w2] = w_val[w1];
+            nfl[w2] = w_fl[w1];
+        }
+    }
+    // Finalise
+    for (int i = 0; i < n_p[1]; ++i) n_next[i] = nnext[i];
+    for (int i = 0; i < w_p[2]; ++i) {
+        w_val[i] = nval[i];
+        w_fl[i] = nfl[i];
+    }
+}
+
+
+
+// Explicit instantiations
+#ifndef FCNN_DOUBLE_ONLY
+template void fcnn::internal::mlp_expand_reorder_inputs(std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<float>&,
+                                                        std::vector<int>&,
+                                                        int,
+                                                        const std::map<int, int>&);
+#endif /* FCNN_DOUBLE_ONLY */
+template void fcnn::internal::mlp_expand_reorder_inputs(std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<int>&,
+                                                        std::vector<double>&,
+                                                        std::vector<int>&,
+                                                        int,
+                                                        const std::map<int, int>&);
+
+
+
 template <typename T>
 int
 fcnn::internal::mlp_rm_neurons(std::vector<int> &layers,
@@ -198,7 +304,8 @@ fcnn::internal::mlp_rm_neurons(std::vector<int> &layers,
                                std::vector<T> &w_val,
                                std::vector<int> &w_fl,
                                int &w_on,
-                               int hl_af, T hl_af_p,
+                               std::vector<int> & af,
+                               std::vector<T> &af_p,
                                bool report)
 {
     int count = 0, nol = layers.size();
@@ -211,7 +318,7 @@ start:
                 // this neuron's input to next layer neurons (bias through
                 // activation function)
                 int bi = w_p[l] + ni * (layers[l - 1] + 1);
-                T in = mlp_act_f(hl_af, hl_af_p, w_val[bi]);
+                T in = mlp_act_f(af[l], af_p[l], w_val[bi]);
                 // find neurons connected to this one and update their biases
                 int wi = w_p[l + 1] + ni + 1, np1 = layers[l] + 1;
                 for (int nn = n_p[l + 1], NN = n_p[l + 2], nni = 0;
@@ -281,19 +388,75 @@ start:
 
 
 
+
 // Explicit instantiations
 #ifndef FCNN_DOUBLE_ONLY
 template int fcnn::internal::mlp_rm_neurons(std::vector<int>&, std::vector<int>&,
                                             std::vector<int>&, std::vector<int>&,
                                             std::vector<int>&, std::vector<float>&,
                                             std::vector<int>&, int&,
-                                            int, float, bool);
+                                            std::vector<int>&, std::vector<float>&,
+                                            bool);
 #endif /* FCNN_DOUBLE_ONLY */
 template int fcnn::internal::mlp_rm_neurons(std::vector<int>&, std::vector<int>&,
                                             std::vector<int>&, std::vector<int>&,
                                             std::vector<int>&, std::vector<double>&,
                                             std::vector<int>&, int&,
-                                            int, double, bool);
+                                            std::vector<int>&, std::vector<double>&,
+                                            bool);
+
+
+template <typename T>
+void
+fcnn::internal::mlp_rm_input_neurons(std::vector<int> &layers,
+                                     std::vector<int> &n_p,
+                                     std::vector<int> &n_prev,
+                                     std::vector<int> &n_next,
+                                     std::vector<int> &w_p,
+                                     std::vector<T> &w_val,
+                                     std::vector<int> &w_fl,
+                                     bool report)
+{
+    int nol = layers.size();
+    for (int n = 0; n < n_p[1]; ++n) {
+        if (n_next[n]) continue;
+        // remove connections to this neuron
+        int wi = w_p[1] + n + 1;
+        for (int nn = 0; nn < layers[1]; ++nn, wi += layers[0]) {
+            w_val.erase(w_val.begin() + wi);
+            w_fl.erase(w_fl.begin() + wi);
+        }
+        for (int ll = 2; ll <= nol; ++ll) w_p[ll] -= layers[1];
+        // remove neuron
+        n_prev.erase(n_prev.begin() + n);
+        n_next.erase(n_next.begin() + n);
+        --layers[0];
+        if (report) {
+            message mes;
+            mes << "removing neuron " << (n + 1)
+                << " in the input layer ("  << layers[0];
+            if (layers[0] == 1) mes << " neuron remains in this layer; ";
+            else mes << " neurons remain in this layer)";
+            fcnn::internal::report(mes);
+        }
+        for (int ll = 1; ll <= nol; ++ll) --n_p[ll];
+        --n;
+    }
+}
+
+
+
+// Explicit instantiations
+#ifndef FCNN_DOUBLE_ONLY
+template void fcnn::internal::mlp_rm_input_neurons(std::vector<int>&, std::vector<int>&,
+                                                   std::vector<int>&, std::vector<int>&,
+                                                   std::vector<int>&, std::vector<float>&,
+                                                   std::vector<int>&, bool);
+#endif /* FCNN_DOUBLE_ONLY */
+template void fcnn::internal::mlp_rm_input_neurons(std::vector<int>&, std::vector<int>&,
+                                                   std::vector<int>&, std::vector<int>&,
+                                                   std::vector<int>&, std::vector<double>&,
+                                                   std::vector<int>&, bool);
 
 
 
@@ -321,7 +484,6 @@ fcnn::internal::mlp_merge(const std::vector<int> &Alayers,
 {
     // layers
     int nol = Alayers.size();
-    // layers
     if (nol != Blayers.size())
         throw exception("numbers of layers disagree");
     layers.resize(nol);
@@ -480,7 +642,7 @@ fcnn::internal::mlp_stack(const std::vector<int> &Alayers, const std::vector<int
 {
     // layers
     if (Alayers.back() != Blayers.front())
-        throw exception("numbers of output and input neurons in merged networks disagree");
+        throw exception("numbers of output and input neurons in stacked networks disagree");
     layers = Alayers;
     layers.insert(layers.end(), Blayers.begin() + 1, Blayers.end());
     int nol = layers.size();
@@ -566,15 +728,16 @@ fcnn::internal::mlp_save_txt(const std::string &fname,
                              const std::vector<int> &layers,
                              const std::vector<T> &w_val,
                              const std::vector<int> &w_fl,
-                             int hl_af, T hl_af_p,
-                             int ol_af, T ol_af_p)
+                             const std::vector<int> &af,
+                             const std::vector<T> &af_p)
 {
     std::ofstream file(fname.c_str());
     if (!file.good()) return false;
     if (netname[0]) write_comment(file, netname);
     else file << "#\n";
 
-    file << "\n# FCNN network representation saved on " << time_str() << "\n\n";
+    file << "\n# FCNN " << fcnn_ver() << " network representation saved on "
+         << time_str() << "\n\n";
 
     file << "# layers (" << num2str((unsigned)layers.size()) << ")\n";
     for (int i = 0; i < (int)layers.size(); ++i) {
@@ -600,17 +763,17 @@ fcnn::internal::mlp_save_txt(const std::string &fname,
         }
     }
     file << "\n\n# activation functions\n";
-    file << "# hidden layer(s): " << mlp_act_f_str(hl_af);
-    if ((hl_af != 1) && (hl_af != 2)) {
-        file << " with s = " << num2str(hl_af_p);
+    for (int i = 1; i < (int)layers.size(); ++i) {
+        file << "# layer " << (i + 1);
+        if (i < layers.size() - 1) file << " (hidden " << i << ") : ";
+        else file << " (output) : ";
+        file << mlp_act_f_str(af[i]);
+        if (af[i] > 2) file << " with s = " << num2str(af_p[i]);
+        file << '\n';
     }
-    file << "\n# output layer: " << mlp_act_f_str(ol_af);
-    if ((ol_af != 1) && (ol_af != 2)) {
-        file << " with s = " << num2str(hl_af_p);
+    for (int i = 1; i < (int)layers.size(); ++i) {
+        file << af[i] << ' ' << af_p[i] << '\n';
     }
-    file << '\n';
-    file << (int) hl_af << ' ' << hl_af_p << '\n';
-    file << (int) ol_af << ' ' << ol_af_p << "\n\n";
     if (file.good()) {
         file.close();
         return true;
@@ -634,8 +797,8 @@ fcnn::internal::mlp_load_txt(const std::string &fname,
                              std::vector<T> &w_val,
                              std::vector<int> &w_fl,
                              int &w_on,
-                             int &hl_af, T &hl_af_p,
-                             int &ol_af, T &ol_af_p)
+                             std::vector<int> &af,
+                             std::vector<T> &af_p)
 {
     std::ifstream file(fname.c_str());
     if (!file.good()) return false;
@@ -682,22 +845,20 @@ fcnn::internal::mlp_load_txt(const std::string &fname,
     }
 
     skip_all(file);
-    if (!file.eof()) {
-        if (!read(file, hl_af)) return false;
+    if (file.eof()) return false;
+    af.push_back(0);
+    af_p.push_back((T)0);
+    while (!file.fail() && !is_deol(file)) {
+        int a;
+        T ap;
+        if (read(file, a)) af.push_back(a);
         if (is_eol(file)) return false;
-        if (!mlp_act_f_valid(hl_af)) return false;
-        if (!read(file, hl_af_p)) return false;
-        if (!is_eol(file)) return false;
-        if (hl_af_p <= T()) return false;
-        if (!read(file, ol_af)) return false;
-        if (is_eol(file)) return false;
-        if (!mlp_act_f_valid(ol_af)) return false;
-        if (!read(file, ol_af_p)) return false;
-        if (!is_eoleof(file)) return false;
-        if (ol_af_p <= T()) return false;
-        skip_all(file);
-        if (!file.eof()) return false;
+        if (read(file, ap)) af_p.push_back(ap);
+        if (ap <= T()) return false;
     }
+    if (af.size() != layers.size()) return false;
+    skip_all(file);
+    if (!file.eof()) return false;
 
     return true;
 }
@@ -711,28 +872,32 @@ template bool fcnn::internal::mlp_save_txt(const std::string&,
                                            const std::vector<int>&,
                                            const std::vector<float>&,
                                            const std::vector<int>&,
-                                           int, float, int, float);
+                                           const std::vector<int>&,
+                                           const std::vector<float>&);
 template bool fcnn::internal::mlp_load_txt(const std::string&,
                                            std::string&,
                                            std::vector<int>&, std::vector<int>&,
                                            std::vector<int>&, std::vector<int>&,
                                            std::vector<int>&, std::vector<float>&,
                                            std::vector<int>&, int&,
-                                           int&, float&, int&, float&);
+                                           std::vector<int>&,
+                                           std::vector<float>&);
 #endif /* FCNN_DOUBLE_ONLY */
 template bool fcnn::internal::mlp_save_txt(const std::string&,
                                            const std::string&,
                                            const std::vector<int>&,
                                            const std::vector<double>&,
                                            const std::vector<int>&,
-                                           int, double, int, double);
+                                           const std::vector<int>&,
+                                           const std::vector<double>&);
 template bool fcnn::internal::mlp_load_txt(const std::string&,
                                            std::string&,
                                            std::vector<int>&, std::vector<int>&,
                                            std::vector<int>&, std::vector<int>&,
                                            std::vector<int>&, std::vector<double>&,
                                            std::vector<int>&, int&,
-                                           int&, double&, int&, double&);
+                                           std::vector<int>&,
+                                           std::vector<double>&);
 
 
 

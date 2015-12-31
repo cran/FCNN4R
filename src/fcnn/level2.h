@@ -36,7 +36,7 @@ namespace internal {
 template <typename T>
 void
 feedf(const int *lays, int no_lays, const int *n_pts,
-      const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+      const T *w_val, const int *af, const T *af_p,
       T *n_st);
 
 
@@ -45,7 +45,7 @@ feedf(const int *lays, int no_lays, const int *n_pts,
 template <typename T>
 void
 backprop(const int *lays, int no_lays, const int *n_pts,
-         int no_weights, const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+         int no_weights, const T *w_val, const int *af, const T *af_p,
          const T *n_st, T *delta, T *grad);
 
 
@@ -54,7 +54,7 @@ backprop(const int *lays, int no_lays, const int *n_pts,
 template <typename T>
 void
 backpropj(const int *lays, int no_lays, const int *n_pts, int j,
-          const int *w_pts, const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+          const int *w_pts, const T *w_val, const int *af, const T *af_p,
           const T *n_st, T *delta, T *grad);
 
 
@@ -63,7 +63,7 @@ backpropj(const int *lays, int no_lays, const int *n_pts, int j,
 template <typename T>
 void
 backpropjd(const int *lays, int no_lays, const int *n_pts, int j,
-           const int *w_pts, const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+           const int *w_pts, const T *w_val, const int *af, const T *af_p,
            const T *n_st, T *delta);
 
 

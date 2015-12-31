@@ -35,7 +35,7 @@ namespace internal {
 
 
 // NOTE: We are not using BLAS1 here - usually BLAS implementations focus
-// on speed of level 2 and level 3 routines, benchmarks show that our
+// on the speed of level 2 and level 3 routines, benchmarks show that our
 // implementation is faster than those found in most of BLAS libs avaialable.
 #if 0 // defined(HAVE_BLAS)
 extern "C" {

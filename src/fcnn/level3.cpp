@@ -48,7 +48,7 @@ using namespace fcnn::internal;
 template <typename T>
 void
 fcnn::internal::eval(const int *lays, int no_lays, const int *n_pts,
-                     const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+                     const T *w_val, const int *af, const T *af_p,
                      int no_datarows, const T *in, T *out)
 {
     int no_neurons = n_pts[no_lays],
@@ -94,7 +94,7 @@ fcnn::internal::eval(const int *lays, int no_lays, const int *n_pts,
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
         feedf(lays, no_lays, n_pts,
-              w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+              w_val, af, af_p,
               work);
         // copy output
         copy(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows);
@@ -109,7 +109,7 @@ fcnn::internal::eval(const int *lays, int no_lays, const int *n_pts,
 template <typename T>
 T
 fcnn::internal::mse(const int *lays, int no_lays, const int *n_pts,
-                    const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+                    const T *w_val, const int *af, const T *af_p,
                     int no_datarows, const T *in, const T *out)
 {
     int no_neurons = n_pts[no_lays],
@@ -159,7 +159,7 @@ fcnn::internal::mse(const int *lays, int no_lays, const int *n_pts,
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
         feedf(lays, no_lays, n_pts,
-              w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+              w_val, af, af_p,
               work);
         // update se
         se += sumsqdiff(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows);
@@ -177,7 +177,7 @@ template <typename T>
 T
 fcnn::internal::grad(const int *lays, int no_lays, const int *n_pts,
                      const int *w_pts, const int *w_fl, const T *w_val,
-                     int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+                     const int *af, const T *af_p,
                      int no_datarows, const T *in, const T *out, T *gr)
 {
     int no_neurons = n_pts[no_lays],
@@ -237,7 +237,7 @@ fcnn::internal::grad(const int *lays, int no_lays, const int *n_pts,
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
         feedf(lays, no_lays, n_pts,
-              w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+              w_val, af, af_p,
               work);
         // init deltas
         diff(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows,
@@ -246,7 +246,7 @@ fcnn::internal::grad(const int *lays, int no_lays, const int *n_pts,
         se += sumsq(no_outputs, delta + n_pts[no_lays - 1], 1);
         // backpropagation
         backprop(lays, no_lays, n_pts,
-                 no_weights, w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+                 no_weights, w_val, af, af_p,
                  work, delta, grad);
     }
 #if defined(HAVE_OPENMP)
@@ -271,7 +271,7 @@ template <typename T>
 void
 fcnn::internal::gradi(const int *lays, int no_lays, const int *n_pts,
                       const int *w_pts, const int *w_fl, const T *w_val,
-                      int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+                      const int *af, const T *af_p,
                       int no_datarows, int i, const T *in, const T *out, T *gr)
 {
     int no_neurons = n_pts[no_lays],
@@ -286,14 +286,14 @@ fcnn::internal::gradi(const int *lays, int no_lays, const int *n_pts,
     copy(no_inputs, in + i, no_datarows, work, 1);
     // feed forward
     feedf(lays, no_lays, n_pts,
-          w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+          w_val, af, af_p,
           work);
     // init deltas
     diff(no_outputs, work + n_pts[no_lays - 1], 1, out + i, no_datarows,
             delta + n_pts[no_lays - 1], 1);
     // backpropagation
     backprop(lays, no_lays, n_pts,
-             no_weights, w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+             no_weights, w_val, af, af_p,
              work, delta, grad);
 
     // get derivatives for active weights
@@ -308,7 +308,7 @@ template <typename T>
 void
 fcnn::internal::gradij(const int *lays, int no_lays, const int *n_pts,
                        const int *w_pts, const int *w_fl, const T *w_val, int no_w_on,
-                       int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+                       const int *af, const T *af_p,
                        int no_datarows, int i, const T *in, T *gr)
 {
     int no_neurons = n_pts[no_lays],
@@ -325,13 +325,13 @@ fcnn::internal::gradij(const int *lays, int no_lays, const int *n_pts,
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
         feedf(lays, no_lays, n_pts,
-              w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+              w_val, af, af_p,
               work);
         // init jth output neuron's delta
         delta[n_pts[no_lays - 1] + j] = 1;
         // backpropagation
         backpropj(lays, no_lays, n_pts, j,
-                  w_pts, w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+                  w_pts, w_val, af, af_p,
                   work, delta, grad);
         // copy gradient
         for (int ii = 0, k = 0, n = no_weights; ii < n; ++ii)
@@ -351,7 +351,7 @@ template <typename T>
 void
 fcnn::internal::jacob(const int *lays, int no_lays, const int *n_pts,
                       const int *w_pts, const int *w_fl, const T *w_val, int no_w_on,
-                      int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+                      const int *af, const T *af_p,
                       int no_datarows, int i, const T *in, T *jac)
 {
     int no_neurons = n_pts[no_lays],
@@ -366,13 +366,13 @@ fcnn::internal::jacob(const int *lays, int no_lays, const int *n_pts,
         copy(no_inputs, in + i, no_datarows, work, 1);
         // feed forward
         feedf(lays, no_lays, n_pts,
-              w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+              w_val, af, af_p,
               work);
         // init jth output neuron's delta
         delta[n_pts[no_lays - 1] + j] = 1;
         // backpropagation
         backpropjd(lays, no_lays, n_pts, j,
-                   w_pts, w_val, hl_af, hl_af_p, ol_af, ol_af_p,
+                   w_pts, w_val, af, af_p,
                    work, delta);
         // copy gradient
         for (int ii = 0; ii < no_inputs; ++ii)
@@ -489,52 +489,52 @@ fcnn::internal::ihessupdate(int nw, int no, T a, const T *g, T *H)
 // Explicit instantiations
 #if !defined(FCNN_DOUBLE_ONLY)
 template void fcnn::internal::eval(const int*, int, const int*,
-                                   const float*, int, float, int, float,
+                                   const float*, const int*, const float*,
                                    int, const float*, float*);
 template float fcnn::internal::mse(const int*, int, const int*,
-                                   const float*, int, float, int, float,
+                                   const float*, const int*, const float*,
                                    int, const float*, const float*);
 template float fcnn::internal::grad(const int*, int, const int*,
                                     const int*, const int*, const float*,
-                                    int, float, int, float,
+                                    const int*, const float*,
                                     int, const float*, const float*, float*);
 template void fcnn::internal::gradi(const int*, int, const int*,
                                     const int*, const int*, const float*,
-                                    int, float, int, float,
+                                    const int*, const float*,
                                     int, int, const float*, const float*, float*);
 template void fcnn::internal::gradij(const int*, int, const int*,
                                      const int*, const int*, const float*, int,
-                                     int, float, int, float,
+                                     const int*, const float*,
                                      int, int, const float*, float*);
 template void fcnn::internal::jacob(const int*, int, const int*,
                                     const int*, const int*, const float*, int,
-                                    int, float, int, float,
+                                    const int*, const float*,
                                     int, int, const float*, float*);
 #if defined(HAVE_BLAS)
 template void fcnn::internal::ihessupdate(int, int, float, const float*, float*);
 #endif /* defined(HAVE_BLAS) */
 #endif /* !defined(FCNN_DOUBLE_ONLY) */
 template void fcnn::internal::eval(const int*, int, const int*,
-                                   const double*, int, double, int, double,
+                                   const double*, const int*, const double*,
                                    int, const double*, double*);
 template double fcnn::internal::mse(const int*, int, const int*,
-                                    const double*, int, double, int, double,
+                                    const double*, const int*, const double*,
                                     int, const double*, const double*);
 template double fcnn::internal::grad(const int*, int, const int*,
                                      const int*, const int*, const double*,
-                                     int, double, int, double,
+                                     const int*, const double*,
                                      int, const double*, const double*, double*);
 template void fcnn::internal::gradi(const int*, int, const int*,
                                     const int*, const int*, const double*,
-                                    int, double, int, double,
+                                    const int*, const double*,
                                     int, int, const double*, const double*, double*);
 template void fcnn::internal::gradij(const int*, int, const int*,
                                      const int*, const int*, const double*, int,
-                                     int, double, int, double,
+                                     const int*, const double*,
                                      int, int, const double*, double*);
 template void fcnn::internal::jacob(const int*, int, const int*,
                                     const int*, const int*, const double*, int,
-                                    int, double, int, double,
+                                    const int*, const double*,
                                     int, int, const double*, double*);
 #if defined(HAVE_BLAS)
 template void fcnn::internal::ihessupdate(int, int, double, const double*, double*);

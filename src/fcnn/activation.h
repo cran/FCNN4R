@@ -36,23 +36,16 @@
 namespace fcnn {
 
 
-/// Multilayer perceptron activation functions enum
+/// Multilayer perceptron activation functions enum.
 enum mlp_activation_f {
 
-    /// Threshold
-    threshold = 1,
-    /// Symmetric threshold
-    sym_threshold,
-    /// Linear \f$ f(x) = s x \f$
-    linear,
-    /// Sigmoid \f$ f(x) = (1+\exp(-2 s x))^{-1} \f$
-    sigmoid,
-    /// Symmetric sigmoid (tanh) \f$ f(x) = 2(1+\exp(-2 s x))^{-1} - 1 \f$
-    sym_sigmoid,
-    /// Sigmoid piecewise approximation
-    sigmoid_approx,
-    /// Symmetric sigmoid piecewise approximation
-    sym_sigmoid_approx
+    threshold = 1, ///< Threshold.
+    sym_threshold, ///< Symmetric threshold.
+    linear, ///< Linear \f$ f(x) = s x \f$.
+    sigmoid, ///< Sigmoid \f$ f(x) = (1+\exp(-2 s x))^{-1} \f$.
+    sym_sigmoid, ///< Symmetric sigmoid (tanh) \f$ f(x) = 2(1+\exp(-2 s x))^{-1} - 1 \f$.
+    sigmoid_approx, ///< Sigmoid piecewise approximation.
+    sym_sigmoid_approx ///< Symmetric sigmoid piecewise approximation.
 
 }; /* enum mpl_activation_f */
 
@@ -61,7 +54,7 @@ namespace internal {
 
 
 
-/// Check validity of activation function index
+/// Check validity of activation function index.
 inline bool
 mlp_act_f_valid(int af)
 {
@@ -80,7 +73,28 @@ mlp_act_f_valid(int af)
 }
 
 
-/// Return string describing activation function
+/// Get default activation function parameter.
+template <typename T>
+inline T
+mlp_act_f_pdefault(int af)
+{
+    switch (af) {
+        case threshold:
+        case sym_threshold:
+        case linear:
+            return (T)1;
+        case sigmoid:
+        case sym_sigmoid:
+        case sigmoid_approx:
+        case sym_sigmoid_approx:
+            return (T).5;
+        default:
+            throw exception("invalid activation function id");
+    }
+}
+
+
+/// Return string describing activation function.
 inline std::string
 mlp_act_f_str(int af)
 {
@@ -107,7 +121,7 @@ mlp_act_f_str(int af)
 
 
 
-/// Hyperbolic tangent approximation
+/// Hyperbolic tangent approximation.
 template <typename T>
 inline T
 tanh_app(const T &x)
@@ -125,7 +139,7 @@ tanh_app(const T &x)
 
 
 
-/// Evaluate activation function given slope parameter and argument value
+/// Evaluate activation function given slope parameter and argument value.
 template <typename T>
 inline T
 mlp_act_f(int af, const T &s, const T &x)
@@ -148,12 +162,12 @@ mlp_act_f(int af, const T &s, const T &x)
         default:
             throw exception("invalid activation function id");
     }
-    return 0.;
+    return 0;
 }
 
 
 /// Evaluate the derivative of activation function given slope parameter
-/// and function value
+/// and function value.
 template <typename T>
 inline T
 mlp_act_f_der(int af, const T &s, const T &y)
@@ -173,7 +187,7 @@ mlp_act_f_der(int af, const T &s, const T &y)
         default:
             throw exception("invalid activation function id");
     }
-    return (T) 0.;
+    return 0;
 }
 
 

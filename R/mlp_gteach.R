@@ -19,7 +19,6 @@
 # #########################################################################
 
 
-
 #' Rprop teaching - minimising arbitrary objective function
 #'
 #' This implementation (`generalisation') of the Rprop algorithm allows users to teach
@@ -77,6 +76,8 @@
 #' }
 #' # create a 2-6-1 network
 #' net <- mlp_net(c(2, 6, 1))
+#' # set activation function in all layers
+#' net <- mlp_set_activation(net, layer = "a", "sigmoid")
 #' # randomise weights
 #' net <- mlp_rnd_weights(net)
 #' # teach
@@ -183,7 +184,7 @@ mlp_teach_grprop <- function(net, obj_func, gradient,
 #' @param net an object of \code{mlp_net} class
 #' @param obj_func function taking an object of \code{mlp_class} class
 #'                 as a single argument returning objective to be minimised
-#' @param Tinit numeric value, initial temperature (default is 0.001)
+#' @param Tinit numeric value, initial temperature (default is 1)
 #' @param epochs integer value, number of epochs (iterations) (default is 1000)
 #' @param report_freq integer value, progress report frequency, if set to 0
 #'        no information is printed on the console (this is the default)
@@ -209,6 +210,8 @@ mlp_teach_grprop <- function(net, obj_func, gradient,
 #' }
 #' # create a 2-6-1 network
 #' net <- mlp_net(c(2, 6, 1))
+#' # set activation function in all layers
+#' net <- mlp_set_activation(net, layer = "a", "sigmoid")
 #' # teach (in real-world applications the no. of epochs should be larger)
 #' netobj <- mlp_teach_sa(net, obj, Tinit = 1, epochs = 100,
 #'                        report_freq = 1)

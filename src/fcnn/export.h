@@ -36,27 +36,26 @@ namespace fcnn {
 namespace internal {
 
 
-/// Export trained network to a C function
-template <typename T>
-bool mlp_export_C(const std::string &fname,
-                  const std::string &netname,
-                  const std::vector<int> &layers,
-                  const std::vector<int> &n_p,
-                  const std::vector<T> &w_val,
-                  int hl_af, T hl_af_p, int ol_af, T ol_af_p);
-
-
-/// Export trained network to a C function with input and output
+/// Export trained network to a C function with optional input and output
 /// affine transformations of the form \f$Ax+b\f$ (input)
-/// and \f$Cx+d\f$ (output).
+/// and \f$Cx+d\f$ (output). When with_wp is set to true the backpropagation code
+/// (for online learning) is also exported. In order to export the backpropagation
+/// code, when output transformation \f$Cx+d\f$ is provided, one has to provide
+/// the inverse transformation given by \f$Ex+f\f$.
 template <typename T>
 bool mlp_export_C(const std::string &fname,
                   const std::string &netname,
                   const std::vector<int> &layers,
                   const std::vector<int> &n_p,
                   const std::vector<T> &w_val,
-                  int hl_af, T hl_af_p, int ol_af, T ol_af_p,
-                  const T *A, const T *b, const T *C, const T *d);
+                  const std::vector<int> &w_fl,
+                  int w_on,
+                  const std::vector<int> &af,
+                  const std::vector<T> &af_p,
+                  bool with_bp,
+                  const T *A, const T *b,
+                  const T *C, const T *d,
+                  const T *E, const T *f);
 
 
 

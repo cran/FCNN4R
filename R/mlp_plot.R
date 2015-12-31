@@ -25,14 +25,16 @@
 #' weights' values are displayed on graph.
 #'
 #' @param net an object of \code{mlp_net} class
-#' @param show_weights logical, should show weights' values be displayed?
+#' @param show_weights logical, should weights' values be displayed?
 #'        (FALSE by default)
+#' @param show_neuron_idx logical, should neurons' indices be displayed?
+#'        (TRUE by default)
 #'
 #' @return This function does not return value.
 #'
 #' @export mlp_plot
 #'
-mlp_plot <- function(net, show_weights = FALSE)
+mlp_plot <- function(net, show_weights = FALSE, show_neuron_idx = TRUE)
 {
     if (!is.mlp_net(net)) {
         stop("expected net argument to be of mlp_net class")
@@ -47,7 +49,7 @@ mlp_plot <- function(net, show_weights = FALSE)
     for (l in 1:L) {
         ly <- (1:lays[l])
         ly <- 0.5 * yl + ly - 0.5 * (1 + lays[l])
-        layspts[[l]] <- ly
+        layspts[[l]] <- rev(ly)
     }
 
     asp <- min(1, (yl / xl)^-.5)
@@ -114,7 +116,11 @@ mlp_plot <- function(net, show_weights = FALSE)
         } else {
             cl <- colh
         }
-        points(x = rep((l - 0.5) * dx, length(ly)), y = ly, col = cl, pch = 16, cex = 3 / max(lays) ^ .3)
+        points(x = rep((l - 0.5) * dx, length(ly)), y = ly, col = cl, pch = 16, cex = 5 / max(lays) ^ .3)
+        if (show_neuron_idx) {
+            text(x = rep((l - 0.5) * dx, length(ly)), y = ly, labels = 1:lays[l],
+                cex = 1.3 / max(lays) ^ .3, col = "white")
+        }
     }
 }
 

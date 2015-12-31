@@ -54,21 +54,33 @@ std::string mlp_act_f_C_code(int af, T s, const std::string &t,
                              const std::string &x, const std::string &y,
                              const std::string &tab)
 {
+    std::string res;
     switch (af) {
         case threshold:
             return tab + y + " = (" + x + " >= 0) ? (" + t + ")1 : (" + t + ")0;\n";
         case sym_threshold:
             return tab + y + " = (" + x + " >= 0) ? (" + t + ")1 : (" + t + ")-1;\n";
         case linear:
-            return tab + y + " = (" + t + ")" + num2str(s) + " * " + x + ";\n";
+            res = tab + y + " = ";
+            if (s != (T)1) res += "(" + t + ")" + num2str(s) + " * ";
+            res += x + ";\n";
+            return res;
         case sigmoid:
-            return tab + y + " = (" + t + ")1 / ((" + t + ")1 + exp((" + t + ")"
-                   + num2str(-2 * s) + " * " + x + "));\n";
+            res = tab + y + " = (" + t + ")1 / ((" + t + ")1 + exp(";
+            if ((T)-2 * s != (T)-1) res += "(" + t + ")" + num2str((T)-2 * s) + " * ";
+            else res += "-";
+            res += x + "));\n";
+            return res;
         case sym_sigmoid:
-            return tab + y + " = (" + t + ")2. / ((" + t + ")1. + exp((" + t + ")"
-                   + num2str(-2. * s) + " * x)) - (" + t + ")1.;\n";
+            res = tab + y + " = (" + t + ")2. / ((" + t + ")1. + exp(";
+            if ((T)-2 * s != (T)-1) res += "(" + t + ")" + num2str((T)-2 * s) + " * ";
+            else res += "-";
+            res += x + ")) - (" + t + ")1.;\n";
+            return res;
         case sigmoid_approx:
-            return tab + x + " = (" + t + ")" + num2str(s) + " * " + x + ";\n"
+            res = tab + x + " = ";
+            if (s != (T)1) res += "(" + t + ")" + num2str(s) + " * ";
+            res += x + ";\n"
                    + tab + "if (" + x + " < (" + t + ")-2.8) " + y
                    + " = (" + t + ")2. / ((" + t + ")1. + exp((" + t + ")-2. * " + x + ")) - (" + t + ")1.;\n"
                    + tab + "else if (" + x + " > (" + t + ") 2.8) " + y
@@ -87,8 +99,11 @@ std::string mlp_act_f_C_code(int af, T s, const std::string &t,
                    + " = (" + t + ")0.16296622 * " + x + " + (" + t + ")0.6380951;\n"
                    + tab + "else " + y + " = (" + t + ")0.03575493 * " + x + " + (" + t + ")0.8925177;\n"
                    + tab + y + " = (" + t + ")0.5 + (" + t + ")0.5 * " + y + ";\n";
+            return res;
         case sym_sigmoid_approx:
-            return tab + x + " = (" + t + ")" + num2str(s) + " * " + x + ";\n"
+            res = tab + x + " = ";
+            if (s != (T)1) res += "(" + t + ")" + num2str(s) + " * ";
+            res += x + ";\n"
                    + tab + "if (" + x + " < (" + t + ")-2.8) " + y
                    + " = (" + t + ")2. / ((" + t + ")1. + exp((" + t + ")-2. * " + x + ")) - (" + t + ")1.;\n"
                    + tab + "else if (" + x + " > (" + t + ")2.8) " + y
@@ -106,139 +121,94 @@ std::string mlp_act_f_C_code(int af, T s, const std::string &t,
                    + tab + "else if (" + x + " < (" + t + ")2.0) " + y
                    + " = (" + t + ")0.16296622 * " + x + " + (" + t + ")0.6380951;\n"
                    + tab + "else " + y + " = (" + t + ")0.03575493 * " + x + " + (" + t + ")0.8925177;\n";
+            return res;
         default:
             error("invalid activation function id");
     }
-    return "";
+    return res;
 }
-
-} /* namespace */
-
-
-
 
 
 template <typename T>
-bool
-fcnn::internal::mlp_export_C(const std::string &fname,
-                             const std::string &netname,
-                             const std::vector<int> &layers,
-                             const std::vector<int> &n_p,
-                             const std::vector<T> &w_val,
-                             int hl_af, T hl_af_p, int ol_af, T ol_af_p)
+std::string
+mlp_act_f_der_C_code(int af, T s, const std::string &t,
+                     const std::string &x, const std::string &y,
+                     const std::string &tab)
 {
-    std::ofstream file(fname.c_str());
-    if (!file.good()) return false;
-
-    std::string name;
-    if (!netname[0]) {
-        name = "exported_net";
-    } else {
-        int i = 0, n = netname.length();
-        for (; i < n; ++i) {
-            char c = netname[i];
-            if (std::isalnum(c)) name += c;
-            else name += '_';
-        }
+    std::string res;
+    switch (af) {
+        case linear:
+            return tab + y + " = (" + t + ")" + num2str(s) + ";\n";
+        case sigmoid_approx:
+        case sigmoid:
+            res = tab + y + " = ";
+            if ((T)2 * s != (T)1) res += "(" + t + ")" + num2str((T)2 * s) + " * ";
+            res += x + " * ((" + t + ")1 - " + x + ");\n";
+            return res;
+        case sym_sigmoid_approx:
+        case sym_sigmoid:
+            res = tab + y + " = ";
+            if (s != (T)1) res += "(" + t + ")" + num2str(s) + " * ";
+            res += "((" + t + ")1 - " + x + " * " + x + ");\n";
+            return res;
+        case threshold:
+        case sym_threshold:
+            throw exception("trying to differentiate step function");
+        default:
+            throw exception("invalid activation function id");
     }
-
-    file << "/*\n * This file was generated automatically by FCNN on "
-         << time_str() << '\n';
-    file << " * Exported network C function name: " << name << "\n";
-    file << " */\n\n\n";
-    file << "#include <math.h>\n\n\n";
-
-    std::string tname;
-    if (types_eq<T, float>::val) tname = "float";
-    if (types_eq<T, double>::val) tname = "double";
-    file << "void\n" << name << "(const " << tname << " *input, "
-         << tname << " *output)\n{\n";
-
-    int nol = layers.size(), non = n_p[nol - 1], now = w_val.size();
-    std::string tab;
-    if (types_eq<T, float>::val) tab = "                 ";
-    if (types_eq<T, double>::val) tab = "                  ";
-    file << "    " << tname << " n[" << non << "];\n";
-    file << "    " << tname << " w[] = {";
-    file << std::setprecision(precision<T>::val);
-    for (int i = 0; i < now; ++i) {
-        file << ' ' << w_val[i];
-        if (i == (now - 1)) file << " };\n";
-        else {
-            file << ',';
-            if (!((i + 1) % 4)) file << '\n' << tab;
-        }
-    }
-    file << "    " << tname << " x;\n";
-    file << "    int wi = 0, ni = " << n_p[1] << ", np;\n";
-
-    tab = "    ";
-    file << '\n';
-    file << tab << "for (; ni < " << n_p[2] << "; ++ni) {\n";
-    file << tab << tab << "x = w[wi++];\n";
-    file << tab << tab << "for (np = 0; np < "
-            << n_p[1] << "; ++np) x += input[np] * w[wi++];\n";
-    file << mlp_act_f_C_code(hl_af, hl_af_p, tname, "x", "n[ni]", tab + tab);
-    file << tab << "}\n";
-    int l = 2;
-    for (; l < nol - 1; ++l) {
-        file << tab << "for (; ni < " << n_p[l + 1] << "; ++ni) {\n";
-        file << tab << tab << "x = w[wi++];\n";
-        file << tab << tab << "for (np = "<< n_p[l - 1] << "; np < "
-             << n_p[l] << "; ++np) x += n[np] * w[wi++];\n";
-        file << mlp_act_f_C_code(hl_af, hl_af_p, tname, "x", "n[ni]", tab + tab);
-        file << tab << "}\n";
-    }
-    file << tab << "for (ni = 0; ni < " << (n_p[l + 1] - n_p[l]) << "; ++ni) {\n";
-    file << tab << tab << "x = w[wi++];\n";
-    file << tab << tab << "for (np = "<< n_p[l - 1] << "; np < "
-            << n_p[l] << "; ++np) x += n[np] * w[wi++];\n";
-    file << mlp_act_f_C_code(ol_af, ol_af_p, tname, "x", "output[ni]", tab + tab);
-    file << tab << "}\n";
-
-    file << "}\n\n";
-
-    if (!file.good()) return false;
-    return true;
+    return res;
 }
-
-
-namespace {
 
 
 
 template <typename T>
 void write_transf(std::ofstream &file, const std::string &name,
-                  const std::string &tname,
                   const T *A, const T *b, int N)
 {
+    std::string tname;
+    int ninrow;
+    if (types_eq<T, float>::val) {
+        tname = "float";
+        ninrow = 6;
+    }
+    if (types_eq<T, double>::val) {
+        tname = "double";
+        ninrow = 4;
+    }
+
+    file << "static const " << tname << " " << name << "_A[" << (N * N) << "] = {\n";
+    file << std::setprecision(precision<T>::val);
+    for (int i = 0, k = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j, ++k) {
+            file << ' ' << A[j * N + i];
+            if (k < (N * N - 1)) {
+                file << ',';
+                if (!((k + 1) % ninrow)) file << '\n';
+            } else file << '\n';
+        }
+    }
+    file << "};\n\n\n";
+
+    file << "static const " << tname << " " << name << "_b[" << N << "] = {\n";
+    file << std::setprecision(precision<T>::val);
+    for (int i = 0; i < N; ++i) {
+        file << ' ' << b[i];
+        if (i < (N - 1)) {
+            file << ',';
+            if (!((i + 1) % ninrow)) file << '\n';
+        } else file << '\n';
+    }
+    file << "};\n\n\n";
+
     file << "void\n" << name << "(const " << tname << " *x, "
          << tname << " *y)\n{\n";
-    for (int i = 0; i < N; ++i) {
-        file << "    y[" << i << "] = ";
-        int k = 0;
-        for (int j = 0; j < N; ++j) {
-            T a = A[i + j * N];
-            if (a != T()) {
-                if (k && !(k % 2)) file << "\n             ";
-                if (k) file << " + ";
-                ++k;
-                if (a != (T)1) {
-                    file << "(" << tname << ")" << a << " * x[" << j << "]";
-                } else {
-                    file << "x[" << j << "]";
-                }
-            }
-        }
-        if (b[i] != T()) {
-            if (k && !(k % 2)) file << "\n             ";
-            if (k) file << " + ";
-            ++k;
-            file << "(" << tname << ")" << b[i];
-        }
-        if (k) file << ";\n"; else file << "0;\n";
-    }
-    file << "}\n\n\n";
+    file << "    int k = 0, i, j;\n";
+    file << "    for (i = 0; i < " << N << "; ++i) {\n"
+         << "        y[i] = " << name << "_b[i];\n"
+         << "        for (j = 0; j < " << N << "; ++j, ++k) {\n"
+         << "            y[i] += " << name << "_A[k] * x[j];\n";
+    file << "        }\n    }\n}\n\n\n";
 }
 
 
@@ -255,15 +225,21 @@ fcnn::internal::mlp_export_C(const std::string &fname,
                              const std::vector<int> &layers,
                              const std::vector<int> &n_p,
                              const std::vector<T> &w_val,
-                             int hl_af, T hl_af_p, int ol_af, T ol_af_p,
-                             const T *A, const T *b, const T *C, const T *d)
+                             const std::vector<int> &w_fl,
+                             int w_on,
+                             const std::vector<int> &af,
+                             const std::vector<T> &af_p,
+                             bool with_bp,
+                             const T *A, const T *b,
+                             const T *C, const T *d,
+                             const T *E, const T *f)
 {
     std::ofstream file(fname.c_str());
     if (!file.good()) return false;
 
     std::string name;
     if (!netname[0]) {
-        name = "exported_net";
+        name = "export";
     } else {
         int i = 0, n = netname.length();
         for (; i < n; ++i) {
@@ -273,63 +249,200 @@ fcnn::internal::mlp_export_C(const std::string &fname,
         }
     }
 
-    file << "/*\n * This file was generated automatically by FCNN on "
-         << time_str() << '\n';
-    file << " * Exported network C function name: " << name << "\n";
-    file << " */\n\n\n";
-    file << "#include <math.h>\n\n\n";
+    bool transf_in = false, transf_out = false, transf_outinv = false;
+    if (A && b) transf_in = true;
+    else if (A || b) error("incomplete input transformation provided");
+    if (C && d) transf_out = true;
+    else if (C || d) error("incomplete output transformation provided");
+    if (E && f) transf_outinv = true;
+    else if (E || f) error("incomplete inverse output transformation provided");
+    if (with_bp && transf_out && !transf_outinv)
+        error("output transformation provided but without inverse transformation");
+
+    file << "/*\n * This file was generated automatically by FCNN "
+         << fcnn_ver() << " on " << time_str() << '\n'
+         << " * Exported C function name (network evaluation): " << name << "_eval\n";
+    if (with_bp) {
+        file << " * Exported C function name (weights update): " << name << "_update\n";
+    }
+    file << " */\n\n#include <math.h>\n\n";
 
     std::string tname;
-    if (types_eq<T, float>::val) tname = "float";
-    if (types_eq<T, double>::val) tname = "double";
+    int ninrow;
+    if (types_eq<T, float>::val) {
+        tname = "float";
+        ninrow = 6;
+    }
+    if (types_eq<T, double>::val) {
+        tname = "double";
+        ninrow = 4;
+    }
+
+    file << "/* function declaration - network evaluation */\nvoid " << name << "_eval(const "
+         << tname << "*, " << tname << "*);\n\n";
+    if (with_bp) {
+        file << "/* function declaration - weights update */\nvoid " << name << "_update(const "
+             << tname << "*, const " << tname << "*);\n\n";
+        file << "/* weights update parameters */\n#define LEARN_RATE 0.2\n#define MOMENTUM 0.5\n\n";
+    }
+    file << "\n/* ------------------------------------------------------------ */\n\n\n";
 
     int nol = layers.size(), non = n_p[nol], now = w_val.size();
+    if (transf_in) write_transf(file, name + "_in", A, b, layers[0]);
+    if (transf_out) write_transf(file, name + "_out", C, d, layers[nol - 1]);
 
-    write_transf(file, name + "_in", tname, A, b, layers[0]);
-    write_transf(file, name + "_out", tname, C, d, layers[nol - 1]);
-
-    file << "void\n" << name << "(const " << tname << " *input, "
-         << tname << " *output)\n{\n";
-
-    std::string tab;
-    if (types_eq<T, float>::val) tab = "                 ";
-    if (types_eq<T, double>::val) tab = "                  ";
-    file << "    " << tname << " n[" << non << "];\n";
-    file << "    " << tname << " w[] = {";
+    file << "static " << (with_bp ? "" : "const ") << tname << " "
+         << name << "_w[" << now << "] = {\n";
     file << std::setprecision(precision<T>::val);
     for (int i = 0; i < now; ++i) {
         file << ' ' << w_val[i];
-        if (i == (now - 1)) file << " };\n";
-        else {
+        if (i < (now - 1)) {
             file << ',';
-            if (!((i + 1) % 4)) file << '\n' << tab;
-        }
+            if (!((i + 1) % ninrow)) file << '\n';
+        } else file << '\n';
     }
+    file << "};\n\n\n";
+
+    file << "void\n" << name << "_eval(const " << tname << " *input, "
+         << tname << " *output)\n{\n";
+
+    std::string tab = "    ";
+    file << "    " << tname << " n[" << non << "];\n";
     file << "    " << tname << " x;\n";
-    file << "    int wi = 0, ni = " << n_p[1] << ", np;\n";
+    file << "    int k = 0, i = " << (transf_in ? n_p[1] : 0) << ", j;\n";
 
     file << '\n';
-    tab = "    ";
-    file << tab << name << "_in(input, n);\n";
+    if (transf_in) {
+        file << tab << name << "_in(input, n);\n";
+    } else {
+        file << tab << "for (; i < " << n_p[1] << "; ++i) n[i] = input[i];\n";
+    }
     int l = 1;
-    for (; l < nol - 1; ++l) {
-        file << tab << "for (; ni < " << n_p[l + 1] << "; ++ni) {\n";
-        file << tab << tab << "x = w[wi++];\n";
-        file << tab << tab << "for (np = "<< n_p[l - 1] << "; np < "
-             << n_p[l] << "; ++np) x += n[np] * w[wi++];\n";
-        file << mlp_act_f_C_code(hl_af, hl_af_p, tname, "x", "n[ni]", tab + tab);
+    for (; l < nol; ++l) {
+        file << tab << "for (; i < " << n_p[l + 1] << "; ++i) {\n";
+        file << tab << tab << "x = " << name << "_w[k++];\n";
+        file << tab << tab << "for (j = "<< n_p[l - 1] << "; j < "
+             << n_p[l] << "; ++j) x += n[j] * " << name << "_w[k++];\n";
+        file << mlp_act_f_C_code(af[l], af_p[l], tname, "x", "n[i]", tab + tab);
         file << tab << "}\n";
     }
-    file << tab << "for (; ni < " << n_p[l + 1] << "; ++ni) {\n";
-    file << tab << tab << "x = w[wi++];\n";
-    file << tab << tab << "for (np = "<< n_p[l - 1] << "; np < "
-            << n_p[l] << "; ++np) x += n[np] * w[wi++];\n";
-    file << mlp_act_f_C_code(ol_af, ol_af_p, tname, "x", "n[ni]", tab + tab);
+    --l;
+    if (transf_out) {
+        file << tab << name << "_out(n + " << n_p[l] << ", output);\n";
+    } else {
+        file << tab << "for (i = 0, j = " << n_p[l] << "; i < " << layers[l]
+             << "; ++i, ++j) output[i] = n[j];\n";
+    }
+
+    file << "}\n\n\n";
+
+    if (!with_bp) goto end;
+
+    if (transf_outinv) write_transf(file, name + "_outinv", E, f, layers[nol - 1]);
+
+    file << "static const int " << name << "_widx[] = {\n";
+    ninrow = 10;
+    for (int i = 0, j = 0; i < now; ++i) {
+        if (w_fl[i]) ++j;
+        file << ' ' << (w_fl[i] ? j : 0);
+        if (i < (now - 1)) {
+            file << ',';
+            if (!((i + 1) % ninrow)) file << '\n';
+        } else file << '\n';
+    }
+    file << "};\n\n\n";
+
+    file << "static " << tname << " " << name << "_m[" << w_on << "] = {\n";
+    ninrow = 26;
+    for (int i = 0; i < w_on; ++i) {
+        file << " 0";
+        if (i < (w_on - 1)) {
+            file << ',';
+            if (!((i + 1) % ninrow)) file << '\n';
+        } else file << '\n';
+    }
+    file << "};\n\n\n";
+
+    file << "static " << tname << " " << name << "_gr[" << w_on << "];\n\n\n";
+
+    file << "void\n" << name << "_update(const " << tname << " *input, const "
+         << tname << " *output)\n{\n";
+
+    file << "    " << tname << " n[" << non << "];\n";
+    file << "    " << tname << " x;\n";
+    file << "    " << tname << " d[" << non << "];\n";
+    file << "    int k = 0, i = " << (transf_in ? n_p[1] : 0) << ", j;\n";
+
+    file << '\n';
+    if (transf_in) {
+        file << tab << name << "_in(input, n);\n";
+    } else {
+        file << tab << "for (; i < " << n_p[1] << "; ++i) n[i] = input[i];\n";
+    }
+    for (l = 1; l < nol; ++l) {
+        file << tab << "for (; i < " << n_p[l + 1] << "; ++i) {\n";
+        file << tab << tab << "x = " << name << "_w[k++];\n";
+        file << tab << tab << "for (j = "<< n_p[l - 1] << "; j < "
+             << n_p[l] << "; ++j) x += n[j] * " << name << "_w[k++];\n";
+        file << mlp_act_f_C_code(af[l], af_p[l], tname, "x", "n[i]", tab + tab);
+        file << tab << "}\n";
+    }
+    --l;
+    file << '\n';
+
+    if (transf_outinv) {
+        file << tab << name << "_outinv(output, d + " << n_p[l] << ");\n";
+        file << tab << "for (i = " << n_p[l] << "; i < " << n_p[l + 1]
+             << "; ++i) d[i] = n[i] - d[i];\n";
+    } else {
+        file << tab << "for (i = 0, j = " << n_p[l] << "; i < " << layers[l]
+             << "; ++i, ++j) d[j] = n[j] - output[i];\n";
+    }
+    file << tab << "for (i = 0; i < " << n_p[l] << "; ++i, ++j) d[i] = 0;\n";
+    file << tab << "for (i = 0; i < " << w_on << "; ++i) " << name << "_gr[i] = 0;\n";
+    for (l = nol - 1; l > 1; --l) {
+        file << tab << "for (i = " << (n_p[l + 1] - 1);
+        if (l == nol - 1) file << ", --k";
+        file << "; i >= " << n_p[l] << "; --i) {\n";
+        file << mlp_act_f_der_C_code(af[l], af_p[l], tname, "n[i]", "x", tab + tab);
+        file << tab << tab << "x *= d[i];\n";
+        file << tab << tab << "for (j = " << (n_p[l] - 1) << "; j >= " << n_p[l - 1] << "; --j, --k) {\n";
+        file << tab << tab << tab << "d[j] += " << name << "_w[k] * x;\n";
+        file << tab << tab << tab << "if (" << name << "_widx[k]) "
+             << name << "_gr[" << name << "_widx[k] - 1] += n[j] * x;\n";
+        file << tab << tab << "}\n";
+        file << tab << tab << "if (" << name << "_widx[k]) "
+             << name << "_gr[" << name << "_widx[k] - 1] += x;\n";
+        file << tab << tab << "--k;\n";
+        file << tab << "}\n";
+    }
+    file << tab << "for (i = " << (n_p[l + 1] - 1) << "; i >= " << n_p[l] << "; --i) {\n";
+    file << mlp_act_f_der_C_code(af[l], af_p[l], tname, "n[i]", "x", tab + tab);
+    file << tab << tab << "x *= d[i];\n";
+    file << tab << tab << "for (j = " << (n_p[l] - 1) << "; j >= " << n_p[l - 1] << "; --j, --k) {\n";
+    file << tab << tab << tab << "if (" << name << "_widx[k]) "
+            << name << "_gr[" << name << "_widx[k] - 1] += n[j] * x;\n";
+    file << tab << tab << "}\n";
+    file << tab << tab << "if (" << name << "_widx[k]) "
+            << name << "_gr[" << name << "_widx[k] - 1] += x;\n";
+    file << tab << tab << "--k;\n";
     file << tab << "}\n";
-    file << tab << name << "_out(n + " << n_p[l] << ", output);\n";
+
+    file << tab << "for (i = 0; i < " << now << "; ++i) {\n";
+    file << tab << tab << "k = "<< name << "_widx[i];\n";
+    file << tab << tab << "if (k) {\n";
+    file << tab << tab << tab << "--k;\n";
+    file << tab << tab << tab << "x = "
+         << "(" << tname << ")-LEARN_RATE * " << name << "_gr[k]"
+         << " + (" << tname << ")MOMENTUM * " << name << "_m[k];\n";
+    file << tab << tab << tab << name << "_m[k] = x;\n";
+    file << tab << tab << tab << name << "_w[i] += x;\n";
+    file << tab << tab << "}\n";
+    file << tab << "}\n";
 
     file << "}\n\n";
 
+end:
     if (!file.good()) return false;
     return true;
 }
@@ -338,33 +451,29 @@ fcnn::internal::mlp_export_C(const std::string &fname,
 
 // Explicit instantiations
 #ifndef FCNN_DOUBLE_ONLY
-template bool fcnn::internal::mlp_export_C(const std::string &fname,
-                                           const std::string &netname,
+template bool fcnn::internal::mlp_export_C(const std::string&,
+                                           const std::string&,
                                            const std::vector<int>&,
                                            const std::vector<int>&,
                                            const std::vector<float>&,
-                                           int, float, int, float);
-template bool fcnn::internal::mlp_export_C(const std::string &fname,
-                                           const std::string &netname,
-                                           const std::vector<int>&,
+                                           const std::vector<int>&, int,
                                            const std::vector<int>&,
                                            const std::vector<float>&,
-                                           int, float, int, float,
+                                           bool,
+                                           const float*, const float*,
                                            const float*, const float*,
                                            const float*, const float*);
 #endif /* FCNN_DOUBLE_ONLY */
-template bool fcnn::internal::mlp_export_C(const std::string &fname,
-                                           const std::string &netname,
+template bool fcnn::internal::mlp_export_C(const std::string&,
+                                           const std::string&,
                                            const std::vector<int>&,
                                            const std::vector<int>&,
                                            const std::vector<double>&,
-                                           int, double, int, double);
-template bool fcnn::internal::mlp_export_C(const std::string &fname,
-                                           const std::string &netname,
-                                           const std::vector<int>&,
+                                           const std::vector<int>&, int,
                                            const std::vector<int>&,
                                            const std::vector<double>&,
-                                           int, double, int, double,
+                                           bool,
+                                           const double*, const double*,
                                            const double*, const double*,
                                            const double*, const double*);
 

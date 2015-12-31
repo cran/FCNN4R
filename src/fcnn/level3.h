@@ -36,7 +36,7 @@ namespace internal {
 template <typename T>
 void
 eval(const int *lays, int no_lays, const int *n_pts,
-     const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+     const T *w_val, const int *af, const T *af_p,
      int no_datarows, const T *in, T *out);
 
 
@@ -44,7 +44,7 @@ eval(const int *lays, int no_lays, const int *n_pts,
 template <typename T>
 T
 mse(const int *lays, int no_lays, const int *n_pts,
-    const T *w_val, int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+    const T *w_val, const int *af, const T *af_p,
     int no_datarows, const T *in, const T *out);
 
 
@@ -54,7 +54,7 @@ template <typename T>
 T
 grad(const int *lays, int no_lays, const int *n_pts,
      const int *w_pts, const int *w_fl, const T *w_val,
-     int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+     const int *af, const T *af_p,
      int no_datarows, const T *in, const T *out, T *gr);
 
 /// Compute gradient of MSE (derivatives w.r.t. active weights)
@@ -64,7 +64,7 @@ template <typename T>
 void
 gradi(const int *lays, int no_lays, const int *n_pts,
       const int *w_pts, const int *w_fl, const T *w_val,
-      int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+      const int *af, const T *af_p,
       int no_datarows, int i, const T *in, const T *out, T *gr);
 
 /// Compute gradients of networks outputs, i.e the derivatives of outputs
@@ -73,7 +73,7 @@ template <typename T>
 void
 gradij(const int *lays, int no_lays, const int *n_pts,
        const int *w_pts, const int *w_fl, const T *w_val, int no_w_on,
-       int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+       const int *af, const T *af_p,
        int no_datarows, int i, const T *in, T *gr);
 
 /// Compute the Jacobian of network transformation, i.e the derivatives
@@ -82,7 +82,7 @@ template <typename T>
 void
 jacob(const int *lays, int no_lays, const int *n_pts,
       const int *w_pts, const int *w_fl, const T *w_val, int no_w_on,
-      int hl_af, T hl_af_p, int ol_af, T ol_af_p,
+      const int *af, const T *af_p,
       int no_datarows, int i, const T *in, T *jac);
 
 /// Update Hessian inverse approximation given result from gradij.

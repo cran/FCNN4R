@@ -27,7 +27,16 @@
 #include <fcnn/export.h>
 #include <fcnn/level3.h>
 #include <fcnn/activation.h>
+#include <fcnn/utils.h>
 #include <Rcpp.h>
+
+
+RcppExport
+SEXP
+fcnn_ver()
+{
+    return Rcpp::wrap(fcnn::internal::fcnn_ver());
+}
 
 
 RcppExport
@@ -70,6 +79,148 @@ mlp_construct(SEXP lays)
     UNPROTECT(8);
     return ret;
 }
+
+
+
+
+
+RcppExport
+SEXP
+mlp_expand_reorder_inputs(SEXP lays, SEXP np, SEXP nprev, SEXP nnext,
+                          SEXP wp, SEXP wval, SEXP wfl,
+                          SEXP nn, SEXP m)
+{
+    std::vector<int> layers = Rcpp::as<std::vector<int> >(lays);
+    std::vector<int> n_p = Rcpp::as<std::vector<int> >(np);
+    std::vector<int> n_prev = Rcpp::as<std::vector<int> >(nprev);
+    std::vector<int> n_next = Rcpp::as<std::vector<int> >(nnext);
+    std::vector<int> w_p = Rcpp::as<std::vector<int> >(wp);
+    std::vector<double> w_val = Rcpp::as<std::vector<double> >(wval);
+    std::vector<int> w_fl = Rcpp::as<std::vector<int> >(wfl);
+    int nnew = Rcpp::as<int>(nn);
+    std::vector<int> mi = Rcpp::as<std::vector<int> >(m);
+    std::map<int, int> mapi;
+    for (int i = 0; i < mi.size(); ++i) mapi[i + 1] = mi[i];
+
+    try {
+        fcnn::internal::mlp_expand_reorder_inputs(layers, n_p, n_prev, n_next,
+                                                  w_p, w_val, w_fl, nnew, mapi);
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
+
+    SEXP wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl,
+         ret;
+    PROTECT(wrap_layers = Rcpp::wrap(layers));
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(ret = Rcpp::List::create(wrap_layers,
+                                     wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl));
+    UNPROTECT(8);
+    return ret;
+}
+
+
+RcppExport
+SEXP
+mlp_rm_neurons(SEXP lays, SEXP np, SEXP nprev, SEXP nnext,
+               SEXP wp, SEXP wval, SEXP wfl, SEXP won,
+               SEXP a, SEXP ap, SEXP reprt)
+{
+    std::vector<int> layers = Rcpp::as<std::vector<int> >(lays);
+    std::vector<int> n_p = Rcpp::as<std::vector<int> >(np);
+    std::vector<int> n_prev = Rcpp::as<std::vector<int> >(nprev);
+    std::vector<int> n_next = Rcpp::as<std::vector<int> >(nnext);
+    std::vector<int> w_p = Rcpp::as<std::vector<int> >(wp);
+    std::vector<double> w_val = Rcpp::as<std::vector<double> >(wval);
+    std::vector<int> w_fl = Rcpp::as<std::vector<int> >(wfl);
+    int w_on = Rcpp::as<int>(won);
+    std::vector<int> af = Rcpp::as<std::vector<int> >(a);
+    std::vector<double> af_p = Rcpp::as<std::vector<double> >(ap);
+    bool report = Rcpp::as<bool>(reprt);
+
+    int nrm = fcnn::internal::mlp_rm_neurons(layers, n_p, n_prev, n_next,
+                                             w_p, w_val, w_fl, w_on,
+                                             af, af_p,
+                                             report);
+
+    SEXP wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
+         wrap_nrm,
+         ret;
+    PROTECT(wrap_layers = Rcpp::wrap(layers));
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(wrap_w_on = Rcpp::wrap(w_on));
+    PROTECT(wrap_nrm = Rcpp::wrap(nrm));
+    PROTECT(ret = Rcpp::List::create(wrap_layers,
+                                     wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl,
+                                     wrap_w_on,
+                                     wrap_nrm));
+    UNPROTECT(10);
+    return ret;
+}
+
+
+
+
+RcppExport
+SEXP
+mlp_rm_input_neurons(SEXP lays, SEXP np, SEXP nprev, SEXP nnext,
+                     SEXP wp, SEXP wval, SEXP wfl, SEXP reprt)
+{
+    std::vector<int> layers = Rcpp::as<std::vector<int> >(lays);
+    std::vector<int> n_p = Rcpp::as<std::vector<int> >(np);
+    std::vector<int> n_prev = Rcpp::as<std::vector<int> >(nprev);
+    std::vector<int> n_next = Rcpp::as<std::vector<int> >(nnext);
+    std::vector<int> w_p = Rcpp::as<std::vector<int> >(wp);
+    std::vector<double> w_val = Rcpp::as<std::vector<double> >(wval);
+    std::vector<int> w_fl = Rcpp::as<std::vector<int> >(wfl);
+    bool report = Rcpp::as<bool>(reprt);
+
+    fcnn::internal::mlp_rm_input_neurons(layers, n_p, n_prev, n_next,
+                                         w_p, w_val, w_fl, report);
+
+    SEXP wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
+         wrap_w_p, wrap_w_val, wrap_w_fl,
+         ret;
+    PROTECT(wrap_layers = Rcpp::wrap(layers));
+    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
+    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
+    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
+    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
+    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
+    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
+    PROTECT(ret = Rcpp::List::create(wrap_layers,
+                                     wrap_n_p,
+                                     wrap_n_prev,
+                                     wrap_n_next,
+                                     wrap_w_p,
+                                     wrap_w_val,
+                                     wrap_w_fl));
+    UNPROTECT(8);
+    return ret;
+}
+
 
 
 RcppExport
@@ -185,55 +336,6 @@ mlp_stack(SEXP Alays, SEXP Awp, SEXP Awval, SEXP Awfl,
 }
 
 
-RcppExport
-SEXP
-mlp_rm_neurons(SEXP lays, SEXP np, SEXP nprev, SEXP nnext,
-               SEXP wp, SEXP wval, SEXP wfl, SEXP won,
-               SEXP hlaf, SEXP hlafp, SEXP reprt)
-{
-    std::vector<int> layers = Rcpp::as<std::vector<int> >(lays);
-    std::vector<int> n_p = Rcpp::as<std::vector<int> >(np);
-    std::vector<int> n_prev = Rcpp::as<std::vector<int> >(nprev);
-    std::vector<int> n_next = Rcpp::as<std::vector<int> >(nnext);
-    std::vector<int> w_p = Rcpp::as<std::vector<int> >(wp);
-    std::vector<double> w_val = Rcpp::as<std::vector<double> >(wval);
-    std::vector<int> w_fl = Rcpp::as<std::vector<int> >(wfl);
-    int w_on = Rcpp::as<int>(won);
-    int hl_af = Rcpp::as<int>(hlaf);
-    double hl_af_p = Rcpp::as<double>(hlafp);
-    bool report = Rcpp::as<bool>(reprt);
-
-    int nrm = fcnn::internal::mlp_rm_neurons(layers, n_p, n_prev, n_next,
-                                             w_p, w_val, w_fl, w_on,
-                                             hl_af, hl_af_p,
-                                             report);
-
-    SEXP wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
-         wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
-         wrap_nrm,
-         ret;
-    PROTECT(wrap_layers = Rcpp::wrap(layers));
-    PROTECT(wrap_n_p = Rcpp::wrap(n_p));
-    PROTECT(wrap_n_prev = Rcpp::wrap(n_prev));
-    PROTECT(wrap_n_next = Rcpp::wrap(n_next));
-    PROTECT(wrap_w_p = Rcpp::wrap(w_p));
-    PROTECT(wrap_w_val = Rcpp::wrap(w_val));
-    PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
-    PROTECT(wrap_w_on = Rcpp::wrap(w_on));
-    PROTECT(wrap_nrm = Rcpp::wrap(nrm));
-    PROTECT(ret = Rcpp::List::create(wrap_layers,
-                                     wrap_n_p,
-                                     wrap_n_prev,
-                                     wrap_n_next,
-                                     wrap_w_p,
-                                     wrap_w_val,
-                                     wrap_w_fl,
-                                     wrap_w_on,
-                                     wrap_nrm));
-    UNPROTECT(10);
-    return ret;
-}
-
 
 RcppExport
 SEXP
@@ -249,21 +351,19 @@ mlp_import(SEXP fname)
     std::vector<double> w_val;
     std::vector<int> w_fl;
     int w_on;
-    int hl_af;
-    double hl_af_p;
-    int ol_af;
-    double ol_af_p;
+    std::vector<int> af;
+    std::vector<double> af_p;
 
     if (!fcnn::internal::mlp_load_txt(fn,
                                       netname,
                                       layers, n_p, n_prev, n_next,
                                       w_p, w_val, w_fl, w_on,
-                                      hl_af, hl_af_p, ol_af, ol_af_p)) {
+                                      af, af_p)) {
         return R_NilValue;
     }
     SEXP wrap_netname, wrap_layers, wrap_n_p, wrap_n_prev, wrap_n_next,
          wrap_w_p, wrap_w_val, wrap_w_fl, wrap_w_on,
-         wrap_hl_af, wrap_hl_af_p, wrap_ol_af, wrap_ol_af_p,
+         wrap_af, wrap_af_p,
          ret;
     PROTECT(wrap_netname = Rcpp::wrap(netname));
     PROTECT(wrap_layers = Rcpp::wrap(layers));
@@ -274,10 +374,8 @@ mlp_import(SEXP fname)
     PROTECT(wrap_w_val = Rcpp::wrap(w_val));
     PROTECT(wrap_w_fl = Rcpp::wrap(w_fl));
     PROTECT(wrap_w_on = Rcpp::wrap(w_on));
-    PROTECT(wrap_hl_af = Rcpp::wrap(hl_af));
-    PROTECT(wrap_hl_af_p = Rcpp::wrap(hl_af_p));
-    PROTECT(wrap_ol_af = Rcpp::wrap(ol_af));
-    PROTECT(wrap_ol_af_p = Rcpp::wrap(ol_af_p));
+    PROTECT(wrap_af = Rcpp::wrap(af));
+    PROTECT(wrap_af_p = Rcpp::wrap(af_p));
     PROTECT(ret = Rcpp::List::create(wrap_netname,
                                      wrap_layers,
                                      wrap_n_p,
@@ -287,11 +385,9 @@ mlp_import(SEXP fname)
                                      wrap_w_val,
                                      wrap_w_fl,
                                      wrap_w_on,
-                                     wrap_hl_af,
-                                     wrap_hl_af_p,
-                                     wrap_ol_af,
-                                     wrap_ol_af_p));
-    UNPROTECT(14);
+                                     wrap_af,
+                                     wrap_af_p));
+    UNPROTECT(12);
     return ret;
 }
 
@@ -300,45 +396,51 @@ RcppExport
 SEXP
 mlp_export(SEXP fname,
            SEXP nname, SEXP lays, SEXP wval, SEXP wfl,
-           SEXP hlaf, SEXP hlafp, SEXP olaf, SEXP olafp)
+           SEXP a, SEXP ap)
 {
     std::string fn = Rcpp::as<std::string>(fname);
     std::string netname = Rcpp::as<std::string>(nname);
     std::vector<int> layers = Rcpp::as<std::vector<int> >(lays);
     std::vector<double> w_val = Rcpp::as<std::vector<double> >(wval);
     std::vector<int> w_fl = Rcpp::as<std::vector<int> >(wfl);
-    int hl_af = Rcpp::as<int>(hlaf);
-    double hl_af_p = Rcpp::as<double>(hlafp);
-    int ol_af = Rcpp::as<int>(olaf);
-    double ol_af_p = Rcpp::as<double>(olafp);
+    std::vector<int> af = Rcpp::as<std::vector<int> >(a);
+    std::vector<double> af_p = Rcpp::as<std::vector<double> >(ap);
 
     return Rcpp::wrap(fcnn::internal::mlp_save_txt(fn,
                                                    netname, layers, w_val, w_fl,
-                                                   hl_af, hl_af_p, ol_af, ol_af_p));
+                                                   af, af_p));
 }
 
 
 RcppExport
 SEXP
 mlp_export_C(SEXP fname,
-             SEXP nname, SEXP lays, SEXP np, SEXP wval,
-             SEXP hlaf, SEXP hlafp, SEXP olaf, SEXP olafp,
-             SEXP A, SEXP b, SEXP C, SEXP d)
+             SEXP nname, SEXP lays, SEXP np, SEXP wval, SEXP wfl, SEXP won,
+             SEXP a, SEXP ap, SEXP bp,
+             SEXP A, SEXP b, SEXP C, SEXP d, SEXP E, SEXP f)
 {
     std::string fn = Rcpp::as<std::string>(fname);
     std::string netname = Rcpp::as<std::string>(nname);
     std::vector<int> layers = Rcpp::as<std::vector<int> >(lays);
     std::vector<int> n_p = Rcpp::as<std::vector<int> >(np);
     std::vector<double> w_val = Rcpp::as<std::vector<double> >(wval);
-    int hl_af = Rcpp::as<int>(hlaf);
-    double hl_af_p = Rcpp::as<double>(hlafp);
-    int ol_af = Rcpp::as<int>(olaf);
-    double ol_af_p = Rcpp::as<double>(olafp);
+    std::vector<int> w_fl = Rcpp::as<std::vector<int> >(wfl);
+    int w_on = Rcpp::as<int>(won);
+    std::vector<int> af = Rcpp::as<std::vector<int> >(a);
+    std::vector<double> af_p = Rcpp::as<std::vector<double> >(ap);
+    bool with_bp = Rcpp::as<bool>(bp);
+    double *Aptr = Rf_isNull(A) ? 0 : REAL(A), *bptr = Rf_isNull(b) ? 0 : REAL(b),
+           *Cptr = Rf_isNull(C) ? 0 : REAL(C), *dptr = Rf_isNull(d) ? 0 : REAL(d),
+           *Eptr = Rf_isNull(E) ? 0 : REAL(E), *fptr = Rf_isNull(f) ? 0 : REAL(f);
 
-    return Rcpp::wrap(fcnn::internal::mlp_export_C(fn,
-                                                   netname, layers, n_p, w_val,
-                                                   hl_af, hl_af_p, ol_af, ol_af_p,
-                                                   REAL(A), REAL(b), REAL(C), REAL(d)));
+    try {
+        return Rcpp::wrap(fcnn::internal::mlp_export_C(fn,
+                                                       netname, layers, n_p, w_val, w_fl, w_on,
+                                                       af, af_p, with_bp,
+                                                       Aptr, bptr, Cptr, dptr, Eptr, fptr));
+    } catch (fcnn::exception &e) {
+        Rf_error(e.what());
+    }
 }
 
 
@@ -348,9 +450,12 @@ SEXP
 mlp_get_abs_w_idx(SEXP wfl, SEXP idx)
 {
     const int *w_fl = INTEGER(wfl);
-    int i = Rcpp::as<int>(idx);
-    int res = fcnn::internal::mlp_get_abs_w_idx(w_fl, i);
-    return Rcpp::wrap(res);
+    std::vector<int> ii = Rcpp::as<std::vector<int> >(idx);
+    std::vector<int> ai(ii.size());
+    for (int i = 0; i < ii.size(); ++i) {
+        ai[i] = fcnn::internal::mlp_get_abs_w_idx(w_fl, ii[i]);
+    }
+    return Rcpp::wrap(ai);
 }
 
 
@@ -359,11 +464,13 @@ RcppExport
 void
 mlp_set_active(const int *layers, const int *n_p, int *n_prev, int *n_next,
                const int *w_p, double *w_val, int *w_fl, int *w_on,
-               int *i, int *on)
+               int *i, int *on, int *N)
 {
-    fcnn::internal::mlp_set_active(layers, n_p, n_prev, n_next,
-                                   w_p, w_val, w_fl, w_on,
-                                   *i, *on);
+    for (int n = 0; n < *N; ++n) {
+        fcnn::internal::mlp_set_active(layers, n_p, n_prev, n_next,
+                                    w_p, w_val, w_fl, w_on,
+                                    i[n], on[n]);
+    }
 }
 
 
@@ -377,15 +484,15 @@ actvfuncstr(SEXP idx)
 }
 
 
+
 RcppExport
 void
 mlp_eval(const int *lays, const int *no_lays, const int *n_pts,
-         const double *w_val, const int *hl_af, const double *hl_af_p,
-         const int *ol_af, const double *ol_af_p,
+         const double *w_val, const int *af, const double *af_p,
          const int *no_datarows, const double *in, double *out)
 {
     fcnn::internal::eval(lays, *no_lays, n_pts,
-                         w_val, *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                         w_val, af, af_p,
                          *no_datarows, in, out);
 }
 
@@ -394,13 +501,12 @@ mlp_eval(const int *lays, const int *no_lays, const int *n_pts,
 RcppExport
 void
 mlp_mse(const int *lays, const int *no_lays, const int *n_pts,
-        const double *w_val, const int *hl_af, const double *hl_af_p,
-        const int *ol_af, const double *ol_af_p,
+        const double *w_val, const int *af, const double *af_p,
         const int *no_datarows, const double *in, const double *out,
         double *res)
 {
     *res = fcnn::internal::mse(lays, *no_lays, n_pts,
-                               w_val, *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                               w_val, af, af_p,
                                *no_datarows, in, out);
 }
 
@@ -410,15 +516,14 @@ RcppExport
 void
 mlp_grad(const int *lays, const int *no_lays, const int *n_pts,
          const int *w_pts, const int *w_fl, const double *w_val,
-         const int *hl_af, const double *hl_af_p,
-         const int *ol_af, const double *ol_af_p,
+         const int *af, const double *af_p,
          const int *no_datarows, const double *in, const double *out,
          double *msegrad)
 {
     try {
         double mse = fcnn::internal::grad(lays, *no_lays, n_pts,
                                         w_pts, w_fl, w_val,
-                                        *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                                        af, af_p,
                                         *no_datarows, in, out, msegrad + 1);
         msegrad[0] = mse;
     } catch (fcnn::exception &e) {
@@ -432,15 +537,14 @@ RcppExport
 void
 mlp_gradi(const int *lays, const int *no_lays, const int *n_pts,
           const int *w_pts, const int *w_fl, const double *w_val,
-          const int *hl_af, const double *hl_af_p,
-          const int *ol_af, const double *ol_af_p,
+          const int *af, const double *af_p,
           const int *no_datarows, const int *i, double *in, const double *out,
           double *grad)
 {
     try {
         fcnn::internal::gradi(lays, *no_lays, n_pts,
                             w_pts, w_fl, w_val,
-                            *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                            af, af_p,
                             *no_datarows, *i - 1, in, out, grad);
     } catch (fcnn::exception &e) {
         Rf_error(e.what());
@@ -453,15 +557,14 @@ RcppExport
 void
 mlp_gradij(const int *lays, const int *no_lays, const int *n_pts,
            const int *w_pts, const int *w_fl, const double *w_val, const int *no_w_on,
-           const int *hl_af, const double *hl_af_p,
-           const int *ol_af, const double *ol_af_p,
+           const int *af, const double *af_p,
            const int *no_datarows, const int *i, double *in,
            double *grad)
 {
     try {
         fcnn::internal::gradij(lays, *no_lays, n_pts,
                             w_pts, w_fl, w_val, *no_w_on,
-                            *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                            af, af_p,
                             *no_datarows, *i - 1, in, grad);
     } catch (fcnn::exception &e) {
         Rf_error(e.what());
@@ -474,15 +577,14 @@ RcppExport
 void
 mlp_jacob(const int *lays, const int *no_lays, const int *n_pts,
           const int *w_pts, const int *w_fl, const double *w_val, const int *no_w_on,
-          const int *hl_af, const double *hl_af_p,
-          const int *ol_af, const double *ol_af_p,
+          const int *af, const double *af_p,
           const int *no_datarows, const int *i, double *in,
           double *jacob)
 {
     try {
         fcnn::internal::jacob(lays, *no_lays, n_pts,
                               w_pts, w_fl, w_val, *no_w_on,
-                              *hl_af, *hl_af_p, *ol_af, *ol_af_p,
+                              af, af_p,
                               *no_datarows, *i - 1, in, jacob);
     } catch (fcnn::exception &e) {
         Rf_error(e.what());
