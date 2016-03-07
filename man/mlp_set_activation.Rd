@@ -21,7 +21,7 @@ options are: "threshold", "sym_threshold", "linear",
 and "sym_sigmoid_approx"}
 
 \item{slope}{numeric value, activation function slope parameter, if 0
-the default parameter value(s) are chosen for each activation function}
+the default parameter value is chosen for each activation function}
 }
 \value{
 This function returns network (an object of \code{mlp_net} class)

@@ -1,7 +1,7 @@
 /*
  *  This file is a part of Fast Compressed Neural Networks.
  *
- *  Copyright (c) Grzegorz Klima 2012-2015
+ *  Copyright (c) Grzegorz Klima 2012-2016
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,12 +30,7 @@
 #include <fcnn/level3.h>
 #include <fcnn/report.h>
 #include <fcnn/utils.h>
-#ifdef R_DLL
-#include <Rconfig.h>
-#if defined(SUPPORT_OPENMP)
-#define HAVE_OPENMP 1
-#endif /* defined(SUPPORT_OPENMP) */
-#endif /* R_DLL */
+#include <fcnn/fcnncfg.h>
 #if defined(HAVE_OPENMP)
 #include <omp.h>
 #endif /* defined(HAVE_OPENMP) */
@@ -383,13 +378,6 @@ fcnn::internal::jacob(const int *lays, int no_lays, const int *n_pts,
         }
     }
 }
-
-
-#if defined(R_DLL)
-#define HAVE_BLAS
-#include <R_ext/RS.h>
-#define F77_FUNC(name,NAME) F77_NAME(name)
-#endif /* defined(R_DLL) */
 
 
 #if defined(HAVE_BLAS)

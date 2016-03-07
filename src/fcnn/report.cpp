@@ -1,7 +1,7 @@
 /*
  *  This file is a part of Fast Compressed Neural Networks.
  *
- *  Copyright (c) Grzegorz Klima 2015
+ *  Copyright (c) Grzegorz Klima 2015-2016
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,17 +24,17 @@
 
 
 #include <fcnn/report.h>
-#ifdef R_DLL
+#ifdef R_SHAREDLIB
 #include <R.h>
-#else /* R_DLL */
+#else /* R_SHAREDLIB */
 #include <iostream>
-#endif /* R_DLL */
+#endif /* R_SHAREDLIB */
 
 
 void
 fcnn::internal::report(const std::string &s)
 {
-#ifdef R_DLL
+#ifdef R_SHAREDLIB
     Rprintf((s + '\n').c_str());
 #else
     std::cout << s << '\n';

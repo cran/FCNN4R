@@ -34,7 +34,7 @@ This function can be used to teach an ANN to minimise arbitrary objective
 function.
 }
 \examples{
-
+\dontrun{
 # set up XOR problem
 inp <- c(0, 0, 1, 1, 0, 1, 0, 1)
 dim(inp) <- c(4, 2)
@@ -49,11 +49,12 @@ obj <- function(net)
 net <- mlp_net(c(2, 6, 1))
 # set activation function in all layers
 net <- mlp_set_activation(net, layer = "a", "sigmoid")
-# teach (in real-world applications the no. of epochs should be larger)
-netobj <- mlp_teach_sa(net, obj, Tinit = 1, epochs = 100,
+# teach
+netobj <- mlp_teach_sa(net, obj, Tinit = 1, epochs = 1000,
                        report_freq = 1)
 # plot learning history
 plot(netobj$obj, type = 'l')
+}
 
 }
 \keyword{teaching}

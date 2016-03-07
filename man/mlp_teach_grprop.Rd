@@ -49,7 +49,7 @@ network to minimise arbitrary objective function provided that functions
 evaluating objective and computing gradient are provided.
 }
 \examples{
-
+\dontrun{
 # set up XOR problem
 inp <- c(0, 0, 1, 1, 0, 1, 0, 1)
 dim(inp) <- c(4, 2)
@@ -77,11 +77,12 @@ net <- mlp_set_activation(net, layer = "a", "sigmoid")
 # randomise weights
 net <- mlp_rnd_weights(net)
 # teach
-netobj <- mlp_teach_grprop(net, obj, grad, epochs = 100,
+netobj <- mlp_teach_grprop(net, obj, grad, epochs = 500,
                            stop = tol,
                            report_freq = 1)
 # plot learning history
 plot(netobj$obj, type = 'l')
+}
 
 }
 \references{

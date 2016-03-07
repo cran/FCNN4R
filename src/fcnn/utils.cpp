@@ -1,7 +1,7 @@
 /*
  *  This file is a part of Fast Compressed Neural Networks.
  *
- *  Copyright (c) Grzegorz Klima 2008-2015
+ *  Copyright (c) Grzegorz Klima 2008-2016
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
  */
 
 #include <fcnn/utils.h>
-#include <fcnn/version.h>
+#include <fcnn/fcnncfg.h>
 #include <set>
 #include <cstdio>
 #include <cstdlib>
@@ -152,7 +152,7 @@ fcnn::internal::time_str()
 string
 fcnn::internal::fcnn_ver()
 {
-    return string(FCNN_VERSION);
+    return string(VERSION);
 }
 
 
@@ -340,7 +340,7 @@ fcnn::internal::is_eoleof(istream &is)
 
 
 // Not needed under R...
-#ifndef R_DLL
+#ifndef R_SHAREDLIB
 
 std::vector<int>
 fcnn::internal::sample_int(int N, int M)
@@ -359,6 +359,6 @@ fcnn::internal::sample_int(int N, int M)
     return res;
 }
 
-#endif /* R_DLL */
+#endif /* R_SHAREDLIB */
 
 

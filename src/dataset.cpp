@@ -1,7 +1,7 @@
 /*
  *  This file is a part of FCNN4R.
  *
- *  Copyright (c) Grzegorz Klima 2012-2015
+ *  Copyright (c) Grzegorz Klima 2012-2016
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include <fcnn/utils.h>
 #include <Rcpp.h>
 #include <fstream>
+#include <iomanip>
 
 using namespace fcnn::internal;
 

@@ -1,7 +1,7 @@
 # #########################################################################
 # This file is a part of FCNN4R.
 #
-# Copyright (c) Grzegorz Klima 2015
+# Copyright (c) Grzegorz Klima 2015-2016
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -295,11 +295,7 @@ mlp_teach_sgd <- function(net, input, output, tol_level, max_epochs,
         mm <- rep(0, W)
     }
     idx <- sample.int(N, M)
-    if (M == 1) {
-        gm <- mlp_grad(net, t(input[idx, ]), t(output[idx, ]))
-    } else {
-        gm <- mlp_grad(net, as.matrix(input[idx, ]), as.matrix(output[idx, ]))
-    }
+    gm <- mlp_grad(net, input[idx, , drop = FALSE], output[idx, , drop = FALSE])
     w0 <- mlp_get_weights(net)
     g <- gm$grad + l2reg * w0
     mse <- gm$mse
@@ -326,11 +322,7 @@ mlp_teach_sgd <- function(net, input, output, tol_level, max_epochs,
         w1 <- w0 + dw
         net <- mlp_set_weights(net, w1)
         idx <- sample.int(N, M)
-        if (M == 1) {
-            gm <- mlp_grad(net, t(input[idx, ]), t(output[idx, ]))
-        } else {
-            gm <- mlp_grad(net, as.matrix(input[idx, ]), as.matrix(output[idx, ]))
-        }
+        gm <- mlp_grad(net, input[idx, , drop = FALSE], output[idx, , drop = FALSE])
         g <- gm$grad + l2reg * w1
         mse <- gm$mse
         mseall <- FALSE

@@ -1,8 +1,8 @@
 Package: FCNN4R
 Type: Package
 Title: Fast Compressed Neural Networks for R
-Version: 0.6.0
-Date: 2015-12-31
+Version: 0.6.1
+Date: 2016-03-06
 Author: Grzegorz Klima <gklima@users.sourceforge.net>
 Maintainer: Grzegorz Klima <gklima@users.sourceforge.net>
 Description: Provides an interface to kernel routines from the FCNN C++ library.
@@ -18,7 +18,8 @@ Description: Provides an interface to kernel routines from the FCNN C++ library.
     solution.
 Depends: R (>= 3.0), stats, graphics, methods, Rcpp
 License: GPL (>= 2)
+RoxygenNote: 5.0.1
 NeedsCompilation: yes
-Packaged: 2015-12-31 19:45:03 UTC; chaos
+Packaged: 2016-03-07 21:48:52 UTC; chaos
 Repository: CRAN
-Date/Publication: 2015-12-31 23:31:42
+Date/Publication: 2016-03-07 23:49:15

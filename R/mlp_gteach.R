@@ -1,7 +1,7 @@
 # #########################################################################
 # This file is a part of FCNN4R.
 #
-# Copyright (c) Grzegorz Klima 2015
+# Copyright (c) Grzegorz Klima 2015-2016
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@
 #' Logik, Komplexitat u. Deduktionssysteme, 1994.
 #'
 #' @examples
-#'
+#' \dontrun{
 #' # set up XOR problem
 #' inp <- c(0, 0, 1, 1, 0, 1, 0, 1)
 #' dim(inp) <- c(4, 2)
@@ -81,11 +81,12 @@
 #' # randomise weights
 #' net <- mlp_rnd_weights(net)
 #' # teach
-#' netobj <- mlp_teach_grprop(net, obj, grad, epochs = 100,
+#' netobj <- mlp_teach_grprop(net, obj, grad, epochs = 500,
 #'                            stop = tol,
 #'                            report_freq = 1)
 #' # plot learning history
 #' plot(netobj$obj, type = 'l')
+#' }
 #'
 #' @keywords teaching
 #'
@@ -197,7 +198,7 @@ mlp_teach_grprop <- function(net, obj_func, gradient,
 #'         function in consecutive epochs).
 #'
 #' @examples
-#'
+#' \dontrun{
 #' # set up XOR problem
 #' inp <- c(0, 0, 1, 1, 0, 1, 0, 1)
 #' dim(inp) <- c(4, 2)
@@ -212,11 +213,12 @@ mlp_teach_grprop <- function(net, obj_func, gradient,
 #' net <- mlp_net(c(2, 6, 1))
 #' # set activation function in all layers
 #' net <- mlp_set_activation(net, layer = "a", "sigmoid")
-#' # teach (in real-world applications the no. of epochs should be larger)
-#' netobj <- mlp_teach_sa(net, obj, Tinit = 1, epochs = 100,
+#' # teach
+#' netobj <- mlp_teach_sa(net, obj, Tinit = 1, epochs = 1000,
 #'                        report_freq = 1)
 #' # plot learning history
 #' plot(netobj$obj, type = 'l')
+#' }
 #'
 #' @keywords teaching
 #'

@@ -1,7 +1,7 @@
 /*
  *  This file is a part of Fast Compressed Neural Networks.
  *
- *  Copyright (c) Grzegorz Klima 2012-2015
+ *  Copyright (c) Grzegorz Klima 2012-2016
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -418,6 +418,7 @@ fcnn::internal::mlp_rm_input_neurons(std::vector<int> &layers,
                                      bool report)
 {
     int nol = layers.size();
+    std::vector<int> rm;
     for (int n = 0; n < n_p[1]; ++n) {
         if (n_next[n]) continue;
         // remove connections to this neuron
@@ -428,19 +429,26 @@ fcnn::internal::mlp_rm_input_neurons(std::vector<int> &layers,
         }
         for (int ll = 2; ll <= nol; ++ll) w_p[ll] -= layers[1];
         // remove neuron
+        if (report) rm.push_back(rm.size() + n + 1);
         n_prev.erase(n_prev.begin() + n);
         n_next.erase(n_next.begin() + n);
         --layers[0];
-        if (report) {
-            message mes;
-            mes << "removing neuron " << (n + 1)
-                << " in the input layer ("  << layers[0];
-            if (layers[0] == 1) mes << " neuron remains in this layer; ";
-            else mes << " neurons remain in this layer)";
-            fcnn::internal::report(mes);
-        }
         for (int ll = 1; ll <= nol; ++ll) --n_p[ll];
         --n;
+    }
+    if (report && rm.size()) {
+        message mes;
+        if (rm.size() > 1) {
+            mes << "removed neurons";
+            for (std::vector<int>::const_iterator it = rm.begin(); it != rm.end(); ++it)
+                mes << " " << *it;
+        } else {
+            mes << "removed neuron " << rm[0];
+        }
+        mes << " in the input layer ("  << layers[0];
+        if (layers[0] == 1) mes << " neuron remains in this layer; ";
+        else mes << " neurons remain in this layer)";
+        fcnn::internal::report(mes);
     }
 }
 

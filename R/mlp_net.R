@@ -1,7 +1,7 @@
 # #########################################################################
 # This file is a part of FCNN4R.
 #
-# Copyright (c) Grzegorz Klima 2015
+# Copyright (c) Grzegorz Klima 2015-2016
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #' that completely hides the internal workings of the package, which in its
 #' large part is written in C++.
 #'
-#' @aliases mlp_net-class mlp_net-method show,mlp_net-method summary,mlp_net-method
+#' @aliases mlp_net-class mlp_net-method
 #'
 #' @slot m_name character string, network name
 #' @slot m_layers integer vector, stores the numbers of neurons in layers
@@ -141,6 +141,23 @@ is.mlp_net <- function(x)
 
 
 
+# #########################################################################
+# Displaying networks
+# #########################################################################
+
+#' Displaying networks (objects of \code{mlp_net} class)
+#'
+#' These methods can be used to display objects of \code{mlp_net} class. \code{show}
+#' and \code{print} provide short information about network structure and
+#' activation functions, \code{summary} gives detailed information about
+#' all network connections.
+#'
+#' @param object an object of \code{mlp_net} class
+#' @param x an object of \code{mlp_net} class
+#'
+#' @name mlp_net-display
+#'
+#' @aliases show,mlp_net-method
 #' @export
 #'
 setMethod("show", signature(object = "mlp_net"),
@@ -155,7 +172,7 @@ function(object)
     nlays <- length(lays)
     cat(paste0("Layers: ", lays[1], "(input) - ",
         paste0(lays[2:(nlays - 1)], collapse = " - "),
-        " - ", lays[nlays], "(output)\n"))
+               " - ", lays[nlays], "(output)\n"))
     cat(paste0("Active weights (connections & biases): ",
                object@m_w_on, " of ", object@m_w_pointers[nlays + 1], "\n"))
     cat("Activation functions:\n")
@@ -177,13 +194,25 @@ function(object)
         trunc <- FALSE
         wg <- as.character(object@m_w_values)
         wg[which(object@m_w_flags == 0L)] <- "off"
+        wg <- c(wg, "\n")
     }
     cat(wg)
 })
 
 
+#' @rdname mlp_net-display
+#' @aliases print,mlp_net-method
+#' @export
+#'
+setMethod("print", signature(x = "mlp_net"),
+function(x)
+{
+    show(x)
+})
 
 
+#' @rdname mlp_net-display
+#' @aliases summary,mlp_net-method
 #' @export
 #'
 setMethod("summary", signature(object = "mlp_net"),
@@ -589,6 +618,9 @@ mlp_merge <- function(net1, net2, same_inputs = FALSE)
     if (!is.logical(same_inputs)) {
         stop("expected logical argument")
     }
+    if (length(net1@m_layers) != length(net2@m_layers)) {
+        stop("different numbers of layers in networks");
+    }
     if (any(net1@m_af != net2@m_af) || any(net1@m_af_p != net2@m_af_p)) {
         stop("activation functions in networks disagree");
     }
@@ -650,7 +682,7 @@ mlp_stack <- function(net1, net2)
                m_w_flags = res[[7]],
                m_w_on = res[[8]],
                m_af = c(net1@m_af, net2@m_af[2:length(net2@m_af)]),
-               m_af_p = c(net1@m_af_p,  net2@m_af[2:length(net2@m_af_p)]))
+               m_af_p = c(net1@m_af_p, net2@m_af_p[2:length(net2@m_af_p)]))
     return(net)
 }
 
@@ -893,7 +925,7 @@ mlp_actvfunc2str <- function(idx, slope)
 #'                   "sigmoid", "sym_sigmoid" (and "tanh"), "sigmoid_approx",
 #'                   and "sym_sigmoid_approx"
 #' @param slope numeric value, activation function slope parameter, if 0
-#'              the default parameter value(s) are chosen for each activation function
+#'              the default parameter value is chosen for each activation function
 #'
 #' @return This function returns network (an object of \code{mlp_net} class)
 #'         with activation function set.
@@ -1134,18 +1166,11 @@ mlp_set_w <- function(net, val, idx = NULL, layer = NULL, nidx = NULL, nplidx = 
     if (is.null(idx)) {
         idx <- mlp_get_w_idx(net, layer, nidx, nplidx)
     }
-    if (net@m_w_flags[idx] == 0L) {
-        if (!is.null(nidx)) {
-            if (nplidx != 0) {
-                stop(paste0("connection between neuron ", nidx, " in layer ", layer,
-                            " and neuron ", nplidx, " in layer ", layer - 1,
-                            " is off"))
-            } else {
-                stop(paste0("bias of neuron ", nidx, " in layer ", layer,
-                            " is off"))
-            }
+    if (any(net@m_w_flags[idx] == 0L)) {
+        if (length(idx) == 1) {
+            stop("selected weight is off")
         } else {
-            stop(paste0("weight ", idx, " is off"))
+            stop("at least one selected weight is off")
         }
     }
     net@m_w_values[idx] <- val
@@ -1177,18 +1202,11 @@ mlp_get_w <- function(net, idx = NULL, layer = NULL, nidx = NULL, nplidx = NULL)
     if (is.null(idx)) {
         idx <- mlp_get_w_idx(net, layer, nidx, nplidx)
     }
-    if (net@m_w_flags[idx] == 0L) {
-        if (!is.null(nidx)) {
-            if (nplidx != 0) {
-                stop(paste0("connection between neuron ", nidx, " in layer ", layer,
-                            " and neuron ", nplidx, " in layer ", layer - 1,
-                            " is off"))
-            } else {
-                stop(paste0("bias of neuron ", nidx, " in layer ", layer,
-                            " is off"))
-            }
+    if (any(net@m_w_flags[idx] == 0L)) {
+        if (length(idx) == 1) {
+            stop("selected weight is off")
         } else {
-            stop(paste0("weight ", idx, " is off"))
+            stop("at least one selected weight is off")
         }
     }
     return(net@m_w_values[idx])

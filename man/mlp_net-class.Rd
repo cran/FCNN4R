@@ -4,8 +4,6 @@
 \name{mlp_net-class}
 \alias{mlp_net-class}
 \alias{mlp_net-method}
-\alias{show,mlp_net-method}
-\alias{summary,mlp_net-method}
 \title{An S4 class representing Multilayer Perception Network.}
 \description{
 The \code{mlp_net} class represents the Multilayer Perception Network
