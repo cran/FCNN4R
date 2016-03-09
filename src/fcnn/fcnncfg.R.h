@@ -56,14 +56,13 @@
 #undef PACKAGE_VERSION
 #undef STDC_HEADERS
 
-#include <Rconfig.h>
-#if defined(_OPENMP) || defined(SUPPORT_OPENMP)
-#define HAVE_OPENMP 1
-
 #define HAVE_BLAS 1
 #include <R_ext/RS.h>
 #define F77_FUNC(name,NAME) F77_NAME(name)
-#endif /* R_SHAREDLIB */
+
+#include <Rconfig.h>
+#if defined(_OPENMP) || defined(SUPPORT_OPENMP)
+#define HAVE_OPENMP 1
+#endif /* defined(_OPENMP) || defined(SUPPORT_OPENMP) */
 
 #endif /* FCNNCFG_R_H */
-

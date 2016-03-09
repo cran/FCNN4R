@@ -1,4 +1,4 @@
-d7557bdebeecd96bc94cd762ac617dd0 *DESCRIPTION
+8993da30544390049d0663184bb0f7a9 *DESCRIPTION
 db0a62bdc3911ecbebfaf8e89775f866 *NAMESPACE
 c6c7b27b29e5832784d8235efff18dbb *R/dataset.R
 d93fb90976165da1aec787982c31eb44 *R/fcnn4r.R
@@ -46,7 +46,7 @@ dd94ca299d4ad0abc92bd485b9a0a9f3 *src/fcnn/activation.h
 c4227ac3e3455ef426368eb13fcfec55 *src/fcnn/error.h
 fb5abcdb9a480102b12ce7242928f48d *src/fcnn/export.cpp
 3e62a3c957771d7a386104dfca8d0c8a *src/fcnn/export.h
-b84d10934f64f83eff4ac7677d4b5ab6 *src/fcnn/fcnncfg.R.h
+5f2a1c41a38d0d5b829c13a960efd4f9 *src/fcnn/fcnncfg.R.h
 33e476fbdd417739649353b70e6c45f1 *src/fcnn/fcnncfg.h
 4631e4d89ae0b836caf592b317e31774 *src/fcnn/level1.h
 b3d554f5430a8fa61376890195e44885 *src/fcnn/level1_impl.h
